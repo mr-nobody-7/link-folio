@@ -1,14 +1,26 @@
-import express from 'express'
+import express from 'express';
+import dotenv from 'dotenv';
+import { connectDB } from './config/database.js';
+import authRoutes from './routes/auth.routes.js';
 
-const app = express()
-const PORT = 3000
+dotenv.config();
 
-app.use(express.json())
+const app = express();
+const PORT = process.env.PORT || 3000;
 
+// Connect to MongoDB
+connectDB();
+
+// Middleware
+app.use(express.json());
+
+// Routes
 app.get('/health', (req, res) => {
-  res.json({ status: 'Server running' })
-})
+  res.json({ status: 'Server running' });
+});
+
+app.use('/auth', authRoutes);
 
 app.listen(PORT, () => {
-  console.log(`Server running on port ${PORT}`)
-})
+  console.log(`Server running on port ${PORT}`);
+});
