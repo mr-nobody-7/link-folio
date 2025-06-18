@@ -6,6 +6,10 @@ export interface IUser extends Document {
   username: string;
   password: string;
   displayName?: string;
+  bio?: string;
+  avatarUrl?: string;
+  theme?: string;
+  views?: number;
   joinedAt: Date;
 }
 
@@ -34,6 +38,26 @@ const userSchema = new Schema<IUser>({
     type: String,
     trim: true,
     maxlength: 50,
+  },
+  bio: {
+    type: String,
+    trim: true,
+    maxlength: 500,
+    default: '',
+  },
+  avatarUrl: {
+    type: String,
+    trim: true,
+    default: '',
+  },
+  theme: {
+    type: String,
+    trim: true,
+    default: 'default',
+  },
+  views: {
+    type: Number,
+    default: 0,
   },
   joinedAt: {
     type: Date,
