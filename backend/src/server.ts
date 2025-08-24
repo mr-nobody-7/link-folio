@@ -5,6 +5,7 @@ import authRoutes from './routes/auth.routes.js';
 import profileRoutes from './routes/profile.routes.js';
 import linksRoutes from './routes/links.routes.js';
 import analyticsRoutes from './routes/analytics.routes.js';
+import messageRoutes from './routes/message.routes.js';
 
 dotenv.config();
 
@@ -26,6 +27,7 @@ app.use('/auth', authRoutes);
 app.use('/profile', profileRoutes);
 app.use('/links', linksRoutes);
 app.use('/analytics', analyticsRoutes);
+app.use('/messages', messageRoutes);
 
 app.listen(PORT, () => {
   console.log(`Server running on port ${PORT}`);
