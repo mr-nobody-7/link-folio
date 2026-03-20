@@ -96,7 +96,7 @@ export default function SignupPage() {
         <div className="text-center mt-6 text-sm text-[#504d46]">
           Already have an account?{" "}
           <Link
-            href="/login"
+            href="/auth/login"
             className="text-[#ec5c33] underline hover:text-[#d54a29]"
           >
             Log in

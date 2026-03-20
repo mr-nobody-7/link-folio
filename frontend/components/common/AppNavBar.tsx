@@ -27,12 +27,12 @@ const AppNavBar = () => {
         </Link>
         {/* Auth Buttons */}
         <div className="flex items-center gap-3">
-          <Link href="/signup">
+          <Link href="/auth/signup">
             <Button className="rounded-full px-6 py-2 font-bold text-base bg-[#ec5c33] hover:bg-[#d54a29] text-white shadow transition-all duration-200 transform hover:scale-105">
               Sign Up
             </Button>
           </Link>
-          <Link href="/login">
+          <Link href="/auth/login">
             <Button
               variant="outline"
               className="rounded-full px-6 py-2 font-bold text-base"

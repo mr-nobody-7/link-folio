@@ -55,12 +55,12 @@ export default function HomePage() {
               No code. Just you.
             </p>
             <div className="flex flex-col sm:flex-row gap-4 w-full sm:w-auto justify-center">
-              <Link href="/signup" className="w-full sm:w-auto">
+              <Link href="/auth/signup" className="w-full sm:w-auto">
                 <Button className="!px-8 !py-4 w-full sm:w-auto font-bold text-lg rounded-full bg-[#ec5c33] hover:bg-[#d54a29] text-white border-none shadow-lg transform hover:scale-105 transition-all duration-200">
                   Get Started Free
                 </Button>
               </Link>
-              <Link href="/login" className="w-full sm:w-auto">
+              <Link href="/auth/login" className="w-full sm:w-auto">
                 <Button
                   variant="outline"
                   className="!px-8 !py-4 w-full sm:w-auto font-bold text-lg rounded-full shadow-lg"
@@ -147,7 +147,7 @@ export default function HomePage() {
               Join thousands of creators who trust LinkFolio for their
               link-in-bio needs
             </p>
-            <Link href="/signup">
+            <Link href="/auth/signup">
               <Button className="!px-10 !py-4 font-bold text-lg rounded-full bg-white text-[#ec5c33] hover:bg-gray-100 border-none shadow-lg transform hover:scale-105 transition-all duration-200">
                 Start Building Now
               </Button>
