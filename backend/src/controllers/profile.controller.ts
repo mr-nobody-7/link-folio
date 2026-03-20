@@ -1,5 +1,6 @@
 import { Request, Response } from 'express';
 import { User } from '../models/user.model.js';
+import { Link } from '../models/link.model.js';
 import { AuthRequest } from '../middleware/index.js';
 
 export const getProfile = async (
@@ -9,34 +10,31 @@ export const getProfile = async (
   try {
     const { username } = req.params;
 
-    // Finding user by username
     const user = await User.findOne({ username });
 
     if (!user) {
-      res.status(404).json({
-        error: 'Profile not found',
-        message: 'User with this username does not exist',
-      });
+      res.status(404).json({ error: 'Profile not found' });
       return;
     }
 
-    // Increment views (simple analytics)
+    const links = await Link.find({ userId: user._id, enabled: true }).sort({
+      order: 1,
+    });
+
     user.views = (user.views || 0) + 1;
     await user.save();
 
-    // Return profile data (excluding password)
-    const profileData = {
-      id: user._id.toString(),
-      username: user.username,
-      bio: user.bio || '',
-      avatarUrl: user.avatarUrl || '',
-      links: [],
-      views: user.views,
-      joinedAt: user.joinedAt.toISOString(),
-      theme: user.theme || 'default',
-    };
-
-    res.status(200).json(profileData);
+    res.status(200).json({
+      user: {
+        username: user.username,
+        displayName: user.displayName,
+        bio: user.bio,
+        avatarUrl: user.avatarUrl,
+        theme: user.theme,
+        views: user.views,
+      },
+      links,
+    });
   } catch (error) {
     console.error('Get profile error:', error);
     res.status(500).json({
@@ -62,8 +60,16 @@ export const updateProfile = async (
       return;
     }
 
-    // Check if username is taken by another user
-    if (username) {
+    const user = await User.findById(userId);
+    if (!user) {
+      res.status(404).json({
+        error: 'User not found',
+        message: 'User does not exist',
+      });
+      return;
+    }
+
+    if (username !== undefined && username !== user.username) {
       const existingUser = await User.findOne({
         username,
         _id: { $ne: userId },
@@ -78,42 +84,18 @@ export const updateProfile = async (
       }
     }
 
-    // Update user profile
-    const updatedUser = await User.findByIdAndUpdate(
-      userId,
-      {
-        ...(username && { username }),
-        ...(bio !== undefined && { bio }),
-        ...(avatarUrl !== undefined && { avatarUrl }),
-        ...(theme && { theme }),
-        ...(displayName !== undefined && { displayName }),
-      },
-      { new: true }
-    );
+    if (username !== undefined) user.username = username;
+    if (bio !== undefined) user.bio = bio;
+    if (avatarUrl !== undefined) user.avatarUrl = avatarUrl;
+    if (theme !== undefined) user.theme = theme;
+    if (displayName !== undefined) user.displayName = displayName;
 
-    if (!updatedUser) {
-      res.status(404).json({
-        error: 'User not found',
-        message: 'User does not exist',
-      });
-      return;
-    }
+    await user.save();
 
-    const profileData = {
-      id: updatedUser._id.toString(),
-      username: updatedUser.username,
-      bio: updatedUser.bio || '',
-      avatarUrl: updatedUser.avatarUrl || '',
-      theme: updatedUser.theme || 'default',
-      displayName: updatedUser.displayName || '',
-      email: updatedUser.email,
-      joinedAt: updatedUser.joinedAt.toISOString(),
-    };
+    const updatedUserObject = user.toObject();
+    const { password, ...safeUser } = updatedUserObject;
 
-    res.status(200).json({
-      success: true,
-      profile: profileData,
-    });
+    res.status(200).json(safeUser);
   } catch (error) {
     console.error('Update profile error:', error);
     res.status(500).json({

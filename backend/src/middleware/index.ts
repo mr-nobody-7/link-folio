@@ -1,6 +1,5 @@
 import { Request, Response, NextFunction } from 'express';
 import { verifyToken } from '../utils/jwt.utils.js';
-import { User } from '../models/user.model.js';
 
 export interface AuthRequest extends Request {
   user?: {
@@ -29,17 +28,11 @@ export const authenticateToken = async (
 
     const decoded = verifyToken(token);
 
-    // Verify user still exists
-    const user = await User.findById(decoded.userId);
-    if (!user) {
-      res.status(401).json({
-        error: 'Access denied',
-        message: 'User not found',
-      });
-      return;
-    }
-
-    req.user = decoded;
+    req.user = {
+      userId: decoded.userId,
+      email: decoded.email,
+      username: decoded.username,
+    };
     next();
   } catch (error) {
     res.status(403).json({

@@ -20,17 +20,7 @@ export const getLinks = async (
 
     const links = await Link.find({ userId }).sort({ order: 1 });
 
-    const linkResponses: LinkResponse[] = links.map((link) => ({
-      id: link._id.toString(),
-      title: link.title,
-      url: link.url,
-      enabled: link.enabled,
-      order: link.order,
-      isTemporary: link.isTemporary,
-      clicks: link.clicks,
-    }));
-
-    res.status(200).json(linkResponses);
+    res.status(200).json(links);
   } catch (error) {
     console.error('Get links error:', error);
     res.status(500).json({
@@ -46,7 +36,7 @@ export const createLink = async (
 ): Promise<void> => {
   try {
     const userId = req.user?.userId;
-    const { title, url, enabled, isTemporary }: CreateLinkRequest = req.body;
+    const { title, url, isTemporary }: CreateLinkRequest = req.body;
 
     if (!userId) {
       res.status(401).json({
@@ -56,32 +46,29 @@ export const createLink = async (
       return;
     }
 
-    // Get the next order number
-    const lastLink = await Link.findOne({ userId }).sort({ order: -1 });
-    const nextOrder = lastLink ? lastLink.order + 1 : 1;
+    if (!title || !url) {
+      res.status(400).json({
+        error: 'Validation error',
+        message: 'title and url are required',
+      });
+      return;
+    }
+
+    const linksCount = await Link.countDocuments({ userId });
+    const order = linksCount + 1;
 
     const newLink = new Link({
       userId,
       title,
       url,
-      enabled,
-      isTemporary,
-      order: nextOrder,
+      enabled: true,
+      order,
+      isTemporary: isTemporary || false,
     });
 
     await newLink.save();
 
-    const linkResponse: LinkResponse = {
-      id: newLink._id.toString(),
-      title: newLink.title,
-      url: newLink.url,
-      enabled: newLink.enabled,
-      order: newLink.order,
-      isTemporary: newLink.isTemporary,
-      clicks: newLink.clicks,
-    };
-
-    res.status(201).json(linkResponse);
+    res.status(201).json(newLink);
   } catch (error) {
     console.error('Create link error:', error);
     res.status(500).json({
@@ -107,16 +94,23 @@ export const updateLinks = async (
       return;
     }
 
-    // Update all links with new order and content
+    if (!Array.isArray(links)) {
+      res.status(400).json({
+        error: 'Validation error',
+        message: 'links array is required',
+      });
+      return;
+    }
+
     const updatePromises = links.map(async (linkData) => {
       return await Link.findOneAndUpdate(
-        { _id: linkData.id, userId },
+        { _id: (linkData as any)._id, userId },
         {
-          title: linkData.title,
-          url: linkData.url,
-          enabled: linkData.enabled,
-          order: linkData.order,
-          isTemporary: linkData.isTemporary,
+          title: (linkData as any).title,
+          url: (linkData as any).url,
+          enabled: (linkData as any).enabled,
+          order: (linkData as any).order,
+          isTemporary: (linkData as any).isTemporary,
         },
         { new: true }
       );
@@ -124,20 +118,7 @@ export const updateLinks = async (
 
     const updatedLinks = await Promise.all(updatePromises);
 
-    // Filter out null results and format response
-    const validLinks = updatedLinks.filter((link) => link !== null);
-
-    const linkResponses: LinkResponse[] = validLinks.map((link) => ({
-      id: link!._id.toString(),
-      title: link!.title,
-      url: link!.url,
-      enabled: link!.enabled,
-      order: link!.order,
-      isTemporary: link!.isTemporary,
-      clicks: link!.clicks,
-    }));
-
-    res.status(200).json(linkResponses);
+    res.status(200).json(updatedLinks);
   } catch (error) {
     console.error('Update links error:', error);
     res.status(500).json({
@@ -169,16 +150,11 @@ export const deleteLink = async (
     });
 
     if (!deletedLink) {
-      res.status(404).json({
-        error: 'Link not found',
-        message: 'Link does not exist or does not belong to user',
-      });
+      res.status(404).json({ error: 'Link not found' });
       return;
     }
 
-    res.status(200).json({
-      success: true,
-    });
+    res.status(200).json({ message: 'Link deleted' });
   } catch (error) {
     console.error('Delete link error:', error);
     res.status(500).json({
