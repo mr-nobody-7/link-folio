@@ -13,6 +13,7 @@ import {
 } from '@/api/linkfolioApi';
 import { useRouter } from 'next/navigation';
 import { useState, useEffect } from 'react';
+import Link from 'next/link';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import LoadingSpinner from '@/components/common/LoadingSpinner';
@@ -142,9 +143,6 @@ export default function DashboardPage() {
 
   const handleLogout = () => {
     clearToken();
-    if (typeof window !== 'undefined') {
-      localStorage.removeItem('lf_user');
-    }
     router.push('/');
   };
 
@@ -292,9 +290,12 @@ export default function DashboardPage() {
 
   return (
     <div className="min-h-screen bg-[#f8f8f8]">
-      <header className="w-full border-b bg-white">
-        <div className="max-w-5xl mx-auto px-4 py-4 flex items-center justify-between">
-          <h1 className="text-2xl font-bold text-black">LinkFolio</h1>
+      <header className="w-full border-b bg-white/95 backdrop-blur">
+        <div className="max-w-6xl mx-auto px-4 py-4 flex items-center justify-between">
+          <div>
+            <h1 className="text-2xl font-bold text-black">LinkFolio</h1>
+            <p className="text-sm text-[#888888]">Manage your profile and links</p>
+          </div>
           <Button
             onClick={handleLogout}
             className="bg-[#ec5c33] hover:bg-[#d54a29] text-white"
@@ -304,9 +305,15 @@ export default function DashboardPage() {
         </div>
       </header>
 
-      <main className="max-w-5xl mx-auto px-4 py-6 grid grid-cols-1 md:grid-cols-2 gap-6">
-        <section className="bg-white rounded-2xl border border-gray-200 p-5 md:col-span-2">
-          <div className="flex items-start gap-4">
+      <main className="max-w-6xl mx-auto px-4 py-6 grid grid-cols-1 md:grid-cols-2 gap-6">
+        {error ? (
+          <div className="md:col-span-2 rounded-xl border border-[#ec5c33]/25 bg-[#ec5c33]/5 text-[#504d46] px-4 py-3 text-sm">
+            {error}
+          </div>
+        ) : null}
+
+        <section className="bg-white rounded-2xl border border-gray-200 p-5 md:col-span-2 shadow-sm">
+          <div className="flex flex-col sm:flex-row items-start gap-4">
             {user?.avatarUrl ? (
               <img
                 src={user.avatarUrl}
@@ -326,20 +333,25 @@ export default function DashboardPage() {
               </h2>
               <p className="text-[#888888]">@{user?.username || 'username'}</p>
               {user?.bio ? <p className="text-[#504d46] mt-2">{user.bio}</p> : null}
-              <a
+              <Link
                 href={`/${user?.username || ''}`}
+                target="_blank"
                 className="text-[#ec5c33] mt-2 inline-block hover:underline"
               >
                 yourdomain.com/{user?.username || 'username'}
-              </a>
+              </Link>
             </div>
-            <Button variant="outline" onClick={() => setShowEditProfile((v) => !v)}>
+            <Button
+              variant="outline"
+              className="border-[#ec5c33]/35 text-[#ec5c33] hover:bg-[#ec5c33]/5"
+              onClick={() => setShowEditProfile((v) => !v)}
+            >
               Edit Profile
             </Button>
           </div>
 
           {showEditProfile ? (
-            <form onSubmit={handleProfileSave} className="mt-4 grid gap-3">
+            <form onSubmit={handleProfileSave} className="mt-4 grid gap-3 p-4 rounded-xl bg-[#f8f8f8] border border-gray-200">
               <Input
                 placeholder="Display Name"
                 value={profileForm.displayName}
@@ -360,7 +372,7 @@ export default function DashboardPage() {
                 }
               />
               <div>
-                <Button className="bg-[#ec5c33] hover:bg-[#d54a29] text-white">
+                <Button type="submit" className="bg-[#ec5c33] hover:bg-[#d54a29] text-white">
                   Save Profile
                 </Button>
               </div>
@@ -368,7 +380,7 @@ export default function DashboardPage() {
           ) : null}
         </section>
 
-        <section className="bg-white rounded-2xl border border-gray-200 p-5">
+        <section className="bg-white rounded-2xl border border-gray-200 p-5 shadow-sm">
           <div className="flex items-center justify-between mb-4">
             <h3 className="text-xl font-semibold text-black">Your Links</h3>
             <Button
@@ -380,7 +392,7 @@ export default function DashboardPage() {
           </div>
 
           {showAddLink ? (
-            <form onSubmit={handleCreateLink} className="space-y-3 mb-4 border rounded-xl p-3">
+            <form onSubmit={handleCreateLink} className="space-y-3 mb-4 border border-gray-200 rounded-xl p-3 bg-[#f8f8f8]">
               <Input
                 placeholder="Link title"
                 value={newLinkForm.title}
@@ -408,8 +420,14 @@ export default function DashboardPage() {
                 />
                 Temporary link
               </label>
-              <Button className="bg-[#ec5c33] hover:bg-[#d54a29] text-white">Save</Button>
+              <Button type="submit" className="bg-[#ec5c33] hover:bg-[#d54a29] text-white">Save</Button>
             </form>
+          ) : null}
+
+          {links.length === 0 ? (
+            <div className="rounded-xl border border-dashed border-gray-300 p-5 text-center text-sm text-[#888888]">
+              No links yet. Add your first link to get started.
+            </div>
           ) : null}
 
           <div className="space-y-3">
@@ -417,7 +435,7 @@ export default function DashboardPage() {
               const id = link._id || link.id || '';
               const isEditing = editingLinkId === id;
               return (
-                <div key={id} className="border rounded-xl p-3">
+                <div key={id} className="border border-gray-200 rounded-xl p-3 hover:shadow-sm transition-shadow">
                   <div className="flex items-start gap-3">
                     <span className="text-[#888888] select-none mt-1">⋮⋮</span>
                     <div className="flex-1 min-w-0">
@@ -456,6 +474,7 @@ export default function DashboardPage() {
 
                   <div className="mt-3 flex flex-wrap gap-2">
                     <Button
+                      type="button"
                       variant="outline"
                       onClick={() => void handleToggleEnabled(link)}
                     >
@@ -463,17 +482,18 @@ export default function DashboardPage() {
                     </Button>
                     {isEditing ? (
                       <Button
+                        type="button"
                         className="bg-[#ec5c33] hover:bg-[#d54a29] text-white"
                         onClick={() => void saveEditLink(link)}
                       >
                         Save
                       </Button>
                     ) : (
-                      <Button variant="outline" onClick={() => startEditLink(link)}>
+                      <Button type="button" variant="outline" onClick={() => startEditLink(link)}>
                         Edit
                       </Button>
                     )}
-                    <Button variant="destructive" onClick={() => void handleDeleteLink(link)}>
+                    <Button type="button" variant="destructive" onClick={() => void handleDeleteLink(link)}>
                       Delete
                     </Button>
                   </div>
@@ -483,7 +503,7 @@ export default function DashboardPage() {
           </div>
         </section>
 
-        <section className="bg-white rounded-2xl border border-gray-200 p-5">
+        <section className="bg-white rounded-2xl border border-gray-200 p-5 shadow-sm md:col-span-2">
           <h3 className="text-xl font-semibold text-black mb-4">Visitor Messages</h3>
           {messages.length === 0 ? (
             <p className="text-[#888888]">No messages yet</p>
@@ -502,11 +522,6 @@ export default function DashboardPage() {
         </section>
       </main>
 
-      {error ? (
-        <div className="fixed bottom-4 right-4 bg-black text-white text-sm px-4 py-2 rounded-lg shadow-lg">
-          {error}
-        </div>
-      ) : null}
     </div>
   );
 }
