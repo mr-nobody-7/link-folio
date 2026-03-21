@@ -5,7 +5,6 @@ import {
   recordLinkClick,
   recordProfileView,
   postMessage,
-  getToken,
 } from '@/api/linkfolioApi';
 import { useState, useEffect } from 'react';
 import { useParams } from 'next/navigation';
@@ -50,7 +49,6 @@ export default function PublicProfilePage() {
         setProfile(data);
 
         void recordProfileView(username);
-        getToken();
       } catch {
         setNotFound(true);
       } finally {
@@ -109,7 +107,7 @@ export default function PublicProfilePage() {
   }
 
   return (
-    <div className="min-h-screen bg-white px-4 py-10">
+    <div className="min-h-screen bg-[#f8f8f8] px-4 py-10">
       <div className="max-w-md mx-auto text-center">
         {profile.user.avatarUrl ? (
           <img
@@ -131,7 +129,7 @@ export default function PublicProfilePage() {
 
         <div className="mt-8 space-y-3 text-left">
           {profile.links.length === 0 ? (
-            <p className="text-sm text-[#888888] text-center">No links yet.</p>
+            <p className="text-sm text-[#888888] text-center border border-dashed border-gray-300 rounded-xl py-4">No links yet.</p>
           ) : null}
           {profile.links.map((link) => (
             <button
@@ -142,7 +140,10 @@ export default function PublicProfilePage() {
                 window.open(link.url, '_blank', 'noopener,noreferrer');
               }}
             >
-              <span className="font-medium text-black">{link.title}</span>
+              <div className="flex items-center justify-between gap-3">
+                <span className="font-medium text-black">{link.title}</span>
+                <span className="text-xs text-[#888888]">Visit ↗</span>
+              </div>
             </button>
           ))}
         </div>
