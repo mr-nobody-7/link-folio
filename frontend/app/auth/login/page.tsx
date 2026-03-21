@@ -33,8 +33,9 @@ export default function LoginPage() {
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-background px-4">
-      <div className="max-w-md w-full p-8 rounded-2xl bg-white/80 backdrop-blur-sm shadow-xl border border-[#ec5c33]/20 animate-fade-in">
+    <div className="min-h-screen flex items-center justify-center bg-[#f8f8f8] px-4 py-10">
+      <div className="max-w-md w-full p-8 rounded-2xl bg-white shadow-xl border border-[#ec5c33]/20 animate-fade-in">
+        <p className="text-sm text-[#888888] mb-2">Welcome back</p>
         <h2 className="text-3xl font-bold mb-6 text-[#ec5c33] font-display">Log in to LinkFolio</h2>
         <form className="space-y-5" onSubmit={handleSubmit}>
           <Input
@@ -56,7 +57,7 @@ export default function LoginPage() {
             onChange={onChange}
             className="rounded-xl border-[#ec5c33]/30 bg-white/80 backdrop-blur-sm"
           />
-          {err && <div className="text-destructive text-sm">{err}</div>}
+          {err && <div className="text-sm text-[#504d46] bg-[#ec5c33]/10 border border-[#ec5c33]/25 rounded-lg px-3 py-2">{err}</div>}
           <Button className="w-full rounded-xl bg-[#ec5c33] hover:bg-[#d54a29] text-white" disabled={loading}>
             {loading ? <LoadingSpinner /> : "Log In"}
           </Button>
