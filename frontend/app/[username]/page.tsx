@@ -130,6 +130,9 @@ export default function PublicProfilePage() {
         ) : null}
 
         <div className="mt-8 space-y-3 text-left">
+          {profile.links.length === 0 ? (
+            <p className="text-sm text-[#888888] text-center">No links yet.</p>
+          ) : null}
           {profile.links.map((link) => (
             <button
               key={link._id}
@@ -171,7 +174,15 @@ export default function PublicProfilePage() {
             </div>
           </form>
           {messageStatus ? (
-            <p className="mt-2 text-sm text-[#504d46]">{messageStatus}</p>
+            <p
+              className={`mt-2 text-sm ${
+                messageStatus === 'Message sent!'
+                  ? 'text-green-600'
+                  : 'text-[#504d46]'
+              }`}
+            >
+              {messageStatus}
+            </p>
           ) : null}
         </section>
 
