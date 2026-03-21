@@ -42,8 +42,13 @@ export async function signup(body: {
     body: JSON.stringify(body),
   });
 
-  if (typeof window !== 'undefined' && data?.token) {
-    localStorage.setItem('lf_token', data.token);
+  if (typeof window !== 'undefined') {
+    if (data?.token) {
+      localStorage.setItem('lf_token', data.token);
+    }
+    if (data?.user) {
+      localStorage.setItem('lf_user', JSON.stringify(data.user));
+    }
   }
 
   return data.user;
@@ -55,8 +60,13 @@ export async function login(body: { email: string; password: string }) {
     body: JSON.stringify(body),
   });
 
-  if (typeof window !== 'undefined' && data?.token) {
-    localStorage.setItem('lf_token', data.token);
+  if (typeof window !== 'undefined') {
+    if (data?.token) {
+      localStorage.setItem('lf_token', data.token);
+    }
+    if (data?.user) {
+      localStorage.setItem('lf_user', JSON.stringify(data.user));
+    }
   }
 
   return data.user;
@@ -150,5 +160,6 @@ export function getToken() {
 export function clearToken() {
   if (typeof window !== 'undefined') {
     localStorage.removeItem('lf_token');
+    localStorage.removeItem('lf_user');
   }
 }
