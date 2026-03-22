@@ -6,6 +6,11 @@ import {
   deleteLink,
 } from '../controllers/links.controller.js';
 import { authenticateToken } from '../middleware/index.js';
+import { validate } from '../middleware/validate.js';
+import {
+  createLinkSchema,
+  updateLinksSchema,
+} from '../validation/links.validation.js';
 
 const router = Router();
 
@@ -13,8 +18,8 @@ const router = Router();
 router.use(authenticateToken);
 
 router.get('/', getLinks);
-router.post('/', createLink);
-router.put('/', updateLinks);
+router.post('/', validate(createLinkSchema), createLink);
+router.put('/', validate(updateLinksSchema), updateLinks);
 router.delete('/:linkId', deleteLink);
 
 export default router;
