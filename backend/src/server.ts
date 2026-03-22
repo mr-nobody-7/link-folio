@@ -7,6 +7,7 @@ import profileRoutes from './routes/profile.routes.js';
 import linksRoutes from './routes/links.routes.js';
 import analyticsRoutes from './routes/analytics.routes.js';
 import messageRoutes from './routes/message.routes.js';
+import { generalLimiter } from './middleware/rateLimiter.js';
 
 dotenv.config();
 
@@ -24,6 +25,7 @@ app.use(
     credentials: true,
   })
 );
+app.use(generalLimiter);
 
 // Routes
 app.get('/health', (req, res) => {
