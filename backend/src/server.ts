@@ -8,6 +8,10 @@ import linksRoutes from './routes/links.routes.js';
 import analyticsRoutes from './routes/analytics.routes.js';
 import messageRoutes from './routes/message.routes.js';
 import { generalLimiter } from './middleware/rateLimiter.js';
+import {
+  notFoundHandler,
+  globalErrorHandler,
+} from './middleware/errorHandler.js';
 
 dotenv.config();
 
@@ -37,6 +41,9 @@ app.use('/profile', profileRoutes);
 app.use('/links', linksRoutes);
 app.use('/analytics', analyticsRoutes);
 app.use('/messages', messageRoutes);
+
+app.use(notFoundHandler);
+app.use(globalErrorHandler);
 
 app.listen(PORT, () => {
   console.log(`Server running on port ${PORT}`);
