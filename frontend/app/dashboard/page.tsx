@@ -17,6 +17,21 @@ import Link from 'next/link';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import LoadingSpinner from '@/components/common/LoadingSpinner';
+import {
+  DndContext,
+  closestCenter,
+  KeyboardSensor,
+  PointerSensor,
+  useSensor,
+  useSensors,
+} from '@dnd-kit/core';
+import {
+  SortableContext,
+  sortableKeyboardCoordinates,
+  verticalListSortingStrategy,
+  arrayMove,
+} from '@dnd-kit/sortable';
+import SortableLinkItem from '@/components/dashboard/SortableLinkItem';
 
 type DashboardUser = {
   id?: string;
@@ -67,9 +82,6 @@ export default function DashboardPage() {
     url: '',
     isTemporary: false,
   });
-
-  const [editingLinkId, setEditingLinkId] = useState<string | null>(null);
-  const [editLinkForm, setEditLinkForm] = useState({ title: '', url: '' });
 
   useEffect(() => {
     const token = getToken();
@@ -187,83 +199,6 @@ export default function DashboardPage() {
     }
   };
 
-  const handleToggleEnabled = async (targetLink: DashboardLink) => {
-    try {
-      const normalizedLinks = links.map((link) => {
-        const linkId = link._id || link.id;
-        const targetId = targetLink._id || targetLink.id;
-        if (linkId === targetId) {
-          return { ...link, enabled: !link.enabled };
-        }
-        return link;
-      });
-
-      await updateLinks(
-        normalizedLinks.map((link) => ({
-          _id: link._id || link.id,
-          title: link.title,
-          url: link.url,
-          enabled: link.enabled,
-          order: link.order,
-          isTemporary: link.isTemporary,
-        }))
-      );
-
-      setLinks(normalizedLinks);
-    } catch (requestError) {
-      const message =
-        requestError instanceof Error
-          ? requestError.message
-          : 'Failed to toggle link';
-      setError(message);
-    }
-  };
-
-  const startEditLink = (link: DashboardLink) => {
-    setEditingLinkId(link._id || link.id || null);
-    setEditLinkForm({ title: link.title, url: link.url });
-  };
-
-  const saveEditLink = async (link: DashboardLink) => {
-    const targetId = link._id || link.id;
-    if (!targetId) return;
-
-    try {
-      const normalizedLinks = links.map((current) => {
-        const currentId = current._id || current.id;
-        if (currentId === targetId) {
-          return {
-            ...current,
-            title: editLinkForm.title.trim() || current.title,
-            url: editLinkForm.url.trim() || current.url,
-          };
-        }
-        return current;
-      });
-
-      await updateLinks(
-        normalizedLinks.map((current) => ({
-          _id: current._id || current.id,
-          title: current.title,
-          url: current.url,
-          enabled: current.enabled,
-          order: current.order,
-          isTemporary: current.isTemporary,
-        }))
-      );
-
-      setLinks(normalizedLinks);
-      setEditingLinkId(null);
-      setEditLinkForm({ title: '', url: '' });
-    } catch (requestError) {
-      const message =
-        requestError instanceof Error
-          ? requestError.message
-          : 'Failed to update link';
-      setError(message);
-    }
-  };
-
   const handleDeleteLink = async (link: DashboardLink) => {
     const targetId = link._id || link.id;
     if (!targetId) return;
@@ -277,6 +212,130 @@ export default function DashboardPage() {
           ? requestError.message
           : 'Failed to delete link';
       setError(message);
+    }
+  };
+
+  const handleToggleLinkEnabled = async (linkId: string, enabled: boolean) => {
+    try {
+      const updatedLinks = links.map((link) => {
+        const id = link._id || link.id;
+        if (id === linkId) {
+          return { ...link, enabled };
+        }
+        return link;
+      });
+
+      await updateLinks(
+        updatedLinks.map((link) => ({
+          _id: link._id || link.id,
+          title: link.title,
+          url: link.url,
+          enabled: link.enabled,
+          order: link.order,
+          isTemporary: link.isTemporary,
+        }))
+      );
+
+      setLinks(updatedLinks);
+    } catch (requestError) {
+      const message =
+        requestError instanceof Error
+          ? requestError.message
+          : 'Failed to toggle link';
+      setError(message);
+    }
+  };
+
+  const handleEditLink = async (
+    linkId: string,
+    title: string,
+    url: string
+  ) => {
+    try {
+      const updatedLinks = links.map((link) => {
+        const id = link._id || link.id;
+        if (id === linkId) {
+          return { ...link, title, url };
+        }
+        return link;
+      });
+
+      await updateLinks(
+        updatedLinks.map((link) => ({
+          _id: link._id || link.id,
+          title: link.title,
+          url: link.url,
+          enabled: link.enabled,
+          order: link.order,
+          isTemporary: link.isTemporary,
+        }))
+      );
+
+      setLinks(updatedLinks);
+    } catch (requestError) {
+      const message =
+        requestError instanceof Error
+          ? requestError.message
+          : 'Failed to update link';
+      setError(message);
+    }
+  };
+
+  const handleDeleteLinkById = async (linkId: string) => {
+    try {
+      await deleteLink(linkId);
+      setLinks((prev) =>
+        prev.filter((link) => (link._id || link.id) !== linkId)
+      );
+    } catch (requestError) {
+      const message =
+        requestError instanceof Error
+          ? requestError.message
+          : 'Failed to delete link';
+      setError(message);
+    }
+  };
+
+  const handleDragEnd = async (event: any) => {
+    const { active, over } = event;
+
+    if (!over || active.id === over.id) return;
+
+    const oldIndex = links.findIndex(
+      (link) => (link._id || link.id) === active.id
+    );
+    const newIndex = links.findIndex(
+      (link) => (link._id || link.id) === over.id
+    );
+
+    if (oldIndex === -1 || newIndex === -1) return;
+
+    const reordered = arrayMove(links, oldIndex, newIndex);
+    const reorderedWithOrder = reordered.map((link, index) => ({
+      ...link,
+      order: index,
+    }));
+
+    setLinks(reorderedWithOrder);
+
+    try {
+      await updateLinks(
+        reorderedWithOrder.map((link) => ({
+          _id: link._id || link.id,
+          title: link.title,
+          url: link.url,
+          enabled: link.enabled,
+          order: link.order,
+          isTemporary: link.isTemporary,
+        }))
+      );
+    } catch (requestError) {
+      const message =
+        requestError instanceof Error
+          ? requestError.message
+          : 'Failed to reorder links';
+      setError(message);
+      setLinks(links);
     }
   };
 
@@ -430,77 +489,37 @@ export default function DashboardPage() {
             </div>
           ) : null}
 
-          <div className="space-y-3">
-            {links.map((link) => {
-              const id = link._id || link.id || '';
-              const isEditing = editingLinkId === id;
-              return (
-                <div key={id} className="border border-gray-200 rounded-xl p-3 hover:shadow-sm transition-shadow">
-                  <div className="flex items-start gap-3">
-                    <span className="text-[#888888] select-none mt-1">⋮⋮</span>
-                    <div className="flex-1 min-w-0">
-                      {isEditing ? (
-                        <div className="space-y-2">
-                          <Input
-                            value={editLinkForm.title}
-                            onChange={(e) =>
-                              setEditLinkForm((prev) => ({
-                                ...prev,
-                                title: e.target.value,
-                              }))
-                            }
-                          />
-                          <Input
-                            value={editLinkForm.url}
-                            onChange={(e) =>
-                              setEditLinkForm((prev) => ({
-                                ...prev,
-                                url: e.target.value,
-                              }))
-                            }
-                          />
-                        </div>
-                      ) : (
-                        <>
-                          <p className="font-medium text-black">{link.title}</p>
-                          <p className="text-sm text-[#888888] truncate">{link.url}</p>
-                        </>
-                      )}
-                    </div>
-                    <span className="text-xs bg-[#ec5c33]/10 text-[#ec5c33] px-2 py-1 rounded-full">
-                      {link.clicks || 0} clicks
-                    </span>
-                  </div>
-
-                  <div className="mt-3 flex flex-wrap gap-2">
-                    <Button
-                      type="button"
-                      variant="outline"
-                      onClick={() => void handleToggleEnabled(link)}
-                    >
-                      {link.enabled ? 'Disable' : 'Enable'}
-                    </Button>
-                    {isEditing ? (
-                      <Button
-                        type="button"
-                        className="bg-[#ec5c33] hover:bg-[#d54a29] text-white"
-                        onClick={() => void saveEditLink(link)}
-                      >
-                        Save
-                      </Button>
-                    ) : (
-                      <Button type="button" variant="outline" onClick={() => startEditLink(link)}>
-                        Edit
-                      </Button>
-                    )}
-                    <Button type="button" variant="destructive" onClick={() => void handleDeleteLink(link)}>
-                      Delete
-                    </Button>
-                  </div>
-                </div>
-              );
-            })}
-          </div>
+          <DndContext
+            sensors={useSensors(
+              useSensor(PointerSensor, {
+                activationConstraint: {
+                  distance: 8,
+                },
+              }),
+              useSensor(KeyboardSensor, {
+                coordinateGetter: sortableKeyboardCoordinates,
+              })
+            )}
+            collisionDetection={closestCenter}
+            onDragEnd={handleDragEnd}
+          >
+            <SortableContext
+              items={links.map((link) => link._id || link.id || '')}
+              strategy={verticalListSortingStrategy}
+            >
+              <div className="space-y-3">
+                {links.map((link) => (
+                  <SortableLinkItem
+                    key={link._id || link.id}
+                    link={link}
+                    onToggle={handleToggleLinkEnabled}
+                    onDelete={handleDeleteLinkById}
+                    onEdit={handleEditLink}
+                  />
+                ))}
+              </div>
+            </SortableContext>
+          </DndContext>
         </section>
 
         <section className="bg-white rounded-2xl border border-gray-200 p-5 shadow-sm md:col-span-2">
