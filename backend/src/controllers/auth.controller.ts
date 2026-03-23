@@ -1,14 +1,19 @@
-import { Request, Response } from 'express';
+import { Request, Response, NextFunction } from 'express';
 import { User } from '../models/user.model.js';
 import { hashPassword, comparePassword } from '../utils/hash.utils.js';
 import { generateToken } from '../utils/jwt.utils.js';
+import { AppError } from '../middleware/errorHandler.js';
 import {
   SignupRequest,
   LoginRequest,
   AuthResponse,
 } from '../types/auth.types.js';
 
-export const signup = async (req: Request, res: Response): Promise<void> => {
+export const signup = async (
+  req: Request,
+  res: Response,
+  next: NextFunction
+): Promise<void> => {
   try {
     const { email, username, password, displayName }: SignupRequest = req.body;
 
@@ -57,15 +62,19 @@ export const signup = async (req: Request, res: Response): Promise<void> => {
       },
     });
   } catch (error) {
-    console.error('Signup error:', error);
-    res.status(500).json({
-      error: 'Internal server error',
-      message: 'Failed to create user',
-    });
+    if (error instanceof Error) {
+      next(error);
+      return;
+    }
+    next(new AppError('Failed to create user', 500));
   }
 };
 
-export const login = async (req: Request, res: Response): Promise<void> => {
+export const login = async (
+  req: Request,
+  res: Response,
+  next: NextFunction
+): Promise<void> => {
   try {
     const { email, password }: LoginRequest = req.body;
 
@@ -111,10 +120,10 @@ export const login = async (req: Request, res: Response): Promise<void> => {
       },
     });
   } catch (error) {
-    console.error('Login error:', error);
-    res.status(500).json({
-      error: 'Internal server error',
-      message: 'Failed to login',
-    });
+    if (error instanceof Error) {
+      next(error);
+      return;
+    }
+    next(new AppError('Failed to login', 500));
   }
 };
