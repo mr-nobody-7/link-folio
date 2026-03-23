@@ -1,6 +1,6 @@
 import { Request, Response } from 'express';
-import { Link } from '../models/link.model';
-import { User } from '../models/user.model';
+import { Link } from '../models/link.model.js';
+import { User } from '../models/user.model.js';
 
 export const linkClick = async (req: Request, res: Response): Promise<void> => {
   try {

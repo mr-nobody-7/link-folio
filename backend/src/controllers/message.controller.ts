@@ -1,5 +1,5 @@
 import { Request, Response } from 'express';
-import { VisitorMessage } from '../models/message.model';
+import { VisitorMessage } from '../models/message.model.js';
 
 export const getMessages = async (req: Request, res: Response): Promise<void> => {
   try {
