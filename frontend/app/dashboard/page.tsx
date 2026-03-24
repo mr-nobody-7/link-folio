@@ -16,7 +16,7 @@ import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import LoadingSpinner from '@/components/common/LoadingSpinner';
+import DashboardSkeleton from '@/components/dashboard/DashboardSkeleton';
 import {
   DndContext,
   closestCenter,
@@ -118,10 +118,9 @@ export default function DashboardPage() {
         setError(null);
 
         const username = storedUser.username as string;
-        const [profileRes, linksRes, messagesRes] = await Promise.all([
+        const [profileRes, linksRes] = await Promise.all([
           getProfile(username),
           getLinks(),
-          getMessages(username),
         ]);
 
         const profileUser = (profileRes as { user: DashboardUser })?.user;
@@ -133,7 +132,13 @@ export default function DashboardPage() {
           avatarUrl: profileUser?.avatarUrl || '',
         });
         setLinks((linksRes as DashboardLink[]) || []);
-        setMessages((messagesRes as DashboardMessage[]) || []);
+
+        try {
+          const messagesRes = await getMessages(username);
+          setMessages((messagesRes as DashboardMessage[]) || []);
+        } catch {
+          setMessages([]);
+        }
       } catch (requestError) {
         const message =
           requestError instanceof Error
@@ -340,11 +345,7 @@ export default function DashboardPage() {
   };
 
   if (loading) {
-    return (
-      <div className="min-h-screen flex items-center justify-center bg-[#f8f8f8]">
-        <LoadingSpinner />
-      </div>
-    );
+    return <DashboardSkeleton />;
   }
 
   return (
