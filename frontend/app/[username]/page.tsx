@@ -7,7 +7,7 @@ import {
   postMessage,
 } from '@/api/linkfolioApi';
 import { useState, useEffect } from 'react';
-import { useParams } from 'next/navigation';
+import { useParams, notFound } from 'next/navigation';
 import Link from 'next/link';
 import ProfileSkeleton from '@/components/profile/ProfileSkeleton';
 
@@ -33,7 +33,7 @@ export default function PublicProfilePage() {
   const { username } = useParams() as { username: string };
 
   const [loading, setLoading] = useState(true);
-  const [notFound, setNotFound] = useState(false);
+  const [loadError, setLoadError] = useState<Error | null>(null);
   const [profile, setProfile] = useState<ProfileResponse | null>(null);
   const [content, setContent] = useState('');
   const [messageStatus, setMessageStatus] = useState<string | null>(null);
@@ -42,15 +42,20 @@ export default function PublicProfilePage() {
   useEffect(() => {
     const loadProfile = async () => {
       setLoading(true);
-      setNotFound(false);
+      setLoadError(null);
 
       try {
         const data = (await getProfile(username)) as ProfileResponse;
         setProfile(data);
 
         void recordProfileView(username);
-      } catch {
-        setNotFound(true);
+      } catch (error) {
+        if (error instanceof Error && /404|not found/i.test(error.message)) {
+          notFound();
+        }
+        setLoadError(
+          error instanceof Error ? error : new Error('Failed to load profile')
+        );
       } finally {
         setLoading(false);
       }
@@ -91,15 +96,12 @@ export default function PublicProfilePage() {
     return <ProfileSkeleton />;
   }
 
-  if (notFound || !profile) {
-    return (
-      <div className="min-h-screen flex flex-col items-center justify-center bg-white px-4">
-        <p className="text-[#504d46] text-lg mb-4">This profile doesn't exist yet.</p>
-        <Link href="/auth/signup" className="text-[#ec5c33] font-semibold hover:underline">
-          Create yours free →
-        </Link>
-      </div>
-    );
+  if (loadError) {
+    throw loadError;
+  }
+
+  if (!profile) {
+    return null;
   }
 
   return (
