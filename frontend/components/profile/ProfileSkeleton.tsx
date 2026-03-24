@@ -11,8 +11,8 @@ export default function ProfileSkeleton() {
 
         <div className="w-full mt-4 space-y-3">
           <Skeleton className="w-full h-14 rounded-xl" />
-          <Skeleton className="w-full h-14 rounded-xl [animation-delay:100ms]" />
-          <Skeleton className="w-full h-14 rounded-xl [animation-delay:200ms]" />
+          <Skeleton className="w-full h-14 rounded-xl" style={{ animationDelay: '100ms' }} />
+          <Skeleton className="w-full h-14 rounded-xl" style={{ animationDelay: '200ms' }} />
           <Skeleton className="w-full h-14 rounded-xl" />
         </div>
 
