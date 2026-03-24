@@ -9,7 +9,7 @@ import {
 import { useState, useEffect } from 'react';
 import { useParams } from 'next/navigation';
 import Link from 'next/link';
-import LoadingSpinner from '@/components/common/LoadingSpinner';
+import ProfileSkeleton from '@/components/profile/ProfileSkeleton';
 
 type ProfileUser = {
   username: string;
@@ -88,11 +88,7 @@ export default function PublicProfilePage() {
   };
 
   if (loading) {
-    return (
-      <div className="min-h-screen flex items-center justify-center bg-white">
-        <LoadingSpinner />
-      </div>
-    );
+    return <ProfileSkeleton />;
   }
 
   if (notFound || !profile) {
