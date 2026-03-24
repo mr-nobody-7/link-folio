@@ -133,12 +133,13 @@ export default function DashboardPage() {
         });
         setLinks((linksRes as DashboardLink[]) || []);
 
-        try {
-          const messagesRes = await getMessages(username);
-          setMessages((messagesRes as DashboardMessage[]) || []);
-        } catch {
-          setMessages([]);
-        }
+        void getMessages(username)
+          .then((messagesRes) => {
+            setMessages((messagesRes as DashboardMessage[]) || []);
+          })
+          .catch(() => {
+            setMessages([]);
+          });
       } catch (requestError) {
         const message =
           requestError instanceof Error
