@@ -10,6 +10,7 @@ import {
   clearToken,
   getProfile,
   getMessages,
+  getAnalytics,
 } from '@/api/linkfolioApi';
 import { useRouter } from 'next/navigation';
 import { useState, useEffect } from 'react';
@@ -32,6 +33,7 @@ import {
   arrayMove,
 } from '@dnd-kit/sortable';
 import SortableLinkItem from '@/components/dashboard/SortableLinkItem';
+import AnalyticsCard from '@/components/dashboard/AnalyticsCard';
 
 type DashboardUser = {
   id?: string;
@@ -60,6 +62,25 @@ type DashboardMessage = {
   createdAt: string;
 };
 
+type DashboardAnalyticsDaily = {
+  date: string;
+  count: number;
+};
+
+type DashboardAnalyticsLink = {
+  _id: string;
+  title: string;
+  clicks: number;
+};
+
+type DashboardAnalytics = {
+  links: DashboardAnalyticsLink[];
+  daily: DashboardAnalyticsDaily[];
+  todayCount: number;
+  weekCount: number;
+  days: number;
+};
+
 export default function DashboardPage() {
   const router = useRouter();
 
@@ -68,6 +89,11 @@ export default function DashboardPage() {
   const [messages, setMessages] = useState<DashboardMessage[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [analyticsData, setAnalyticsData] = useState<DashboardAnalytics | null>(
+    null
+  );
+  const [analyticsDays, setAnalyticsDays] = useState(7);
+  const [analyticsLoading, setAnalyticsLoading] = useState(false);
 
   const [showEditProfile, setShowEditProfile] = useState(false);
   const [profileForm, setProfileForm] = useState({
@@ -118,9 +144,10 @@ export default function DashboardPage() {
         setError(null);
 
         const username = storedUser.username as string;
-        const [profileRes, linksRes] = await Promise.all([
+        const [profileRes, linksRes, analyticsRes] = await Promise.all([
           getProfile(username),
           getLinks(),
+          getAnalytics(7),
         ]);
 
         const profileUser = (profileRes as { user: DashboardUser })?.user;
@@ -132,6 +159,8 @@ export default function DashboardPage() {
           avatarUrl: profileUser?.avatarUrl || '',
         });
         setLinks((linksRes as DashboardLink[]) || []);
+        setAnalyticsData((analyticsRes as DashboardAnalytics) || null);
+        setAnalyticsDays(7);
 
         void getMessages(username)
           .then((messagesRes) => {
@@ -299,6 +328,23 @@ export default function DashboardPage() {
           ? requestError.message
           : 'Failed to delete link';
       setError(message);
+    }
+  };
+
+  const handleDaysChange = async (newDays: number) => {
+    try {
+      setAnalyticsDays(newDays);
+      setAnalyticsLoading(true);
+      const analyticsRes = await getAnalytics(newDays);
+      setAnalyticsData((analyticsRes as DashboardAnalytics) || null);
+    } catch (requestError) {
+      const message =
+        requestError instanceof Error
+          ? requestError.message
+          : 'Failed to load analytics';
+      setError(message);
+    } finally {
+      setAnalyticsLoading(false);
     }
   };
 
@@ -522,6 +568,21 @@ export default function DashboardPage() {
               </div>
             </SortableContext>
           </DndContext>
+        </section>
+
+        <section className="md:col-span-2">
+          {analyticsLoading ? (
+            <div className="h-64 w-full rounded-xl bg-gray-100 animate-pulse" />
+          ) : analyticsData ? (
+            <AnalyticsCard
+              data={analyticsData.daily}
+              todayCount={analyticsData.todayCount}
+              weekCount={analyticsData.weekCount}
+              days={analyticsDays}
+              links={analyticsData.links}
+              onDaysChange={handleDaysChange}
+            />
+          ) : null}
         </section>
 
         <section className="bg-white rounded-2xl border border-gray-200 p-5 shadow-sm md:col-span-2">
