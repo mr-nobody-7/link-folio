@@ -123,10 +123,24 @@ export async function deleteLink(linkId: string) {
   });
 }
 
-export async function recordLinkClick(linkId: string, username: string) {
+export async function recordLinkClick(
+  linkId: string,
+  username: string,
+  referrer?: string
+) {
+  const effectiveReferrer =
+    referrer || (typeof document !== 'undefined' ? document.referrer : '') || '';
+
   return apiFetch('/analytics/link-click', {
     method: 'POST',
-    body: JSON.stringify({ linkId, username }),
+    body: JSON.stringify({ linkId, username, referrer: effectiveReferrer }),
+  });
+}
+
+export async function getAnalytics(days?: number) {
+  const queryDays = days || 7;
+  return apiFetch(`/analytics?days=${encodeURIComponent(String(queryDays))}`, {
+    method: 'GET',
   });
 }
 
