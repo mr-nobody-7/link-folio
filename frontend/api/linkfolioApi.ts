@@ -2,9 +2,77 @@ const BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000';
 
 type FetchOptions = RequestInit;
 
+function decodeBase64Url(value: string): string {
+  const normalized = value.replace(/-/g, '+').replace(/_/g, '/');
+  const padded = normalized + '='.repeat((4 - (normalized.length % 4)) % 4);
+
+  if (typeof window !== 'undefined' && typeof window.atob === 'function') {
+    return window.atob(padded);
+  }
+
+  return Buffer.from(padded, 'base64').toString('utf-8');
+}
+
+export function isTokenExpired(token: string): boolean {
+  try {
+    const parts = token.split('.');
+    if (parts.length < 2) {
+      return true;
+    }
+
+    const payload = JSON.parse(decodeBase64Url(parts[1]));
+    if (!payload?.exp) {
+      return true;
+    }
+
+    return payload.exp * 1000 < Date.now() + 60_000;
+  } catch {
+    return true;
+  }
+}
+
+async function refreshAccessToken(): Promise<string | null> {
+  const response = await fetch(`${BASE_URL}/auth/refresh`, {
+    method: 'POST',
+    credentials: 'include',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+  });
+
+  if (!response.ok) {
+    return null;
+  }
+
+  const data = await response.json();
+  if (data?.token && typeof window !== 'undefined') {
+    localStorage.setItem('lf_token', data.token);
+    return data.token as string;
+  }
+
+  return null;
+}
+
 async function apiFetch(path: string, options: FetchOptions = {}) {
-  const token =
+  let token =
     typeof window !== 'undefined' ? localStorage.getItem('lf_token') : null;
+
+  if (token && isTokenExpired(token)) {
+    const refreshedToken = await refreshAccessToken();
+
+    if (!refreshedToken) {
+      if (typeof window !== 'undefined') {
+        localStorage.removeItem('lf_token');
+        localStorage.removeItem('lf_user');
+        if (!window.location.pathname.startsWith('/auth/login')) {
+          window.location.href = '/auth/login';
+        }
+      }
+      throw new Error('Session expired. Please log in again.');
+    }
+
+    token = refreshedToken;
+  }
 
   const headers = {
     'Content-Type': 'application/json',
@@ -14,6 +82,7 @@ async function apiFetch(path: string, options: FetchOptions = {}) {
 
   const response = await fetch(BASE_URL + path, {
     ...options,
+    credentials: 'include',
     headers,
   });
 
@@ -171,9 +240,17 @@ export function getToken() {
   return localStorage.getItem('lf_token');
 }
 
-export function clearToken() {
-  if (typeof window !== 'undefined') {
-    localStorage.removeItem('lf_token');
-    localStorage.removeItem('lf_user');
+export async function clearToken() {
+  try {
+    await apiFetch('/auth/logout', {
+      method: 'POST',
+    });
+  } catch {
+    // Always clear local session, even if logout API fails.
+  } finally {
+    if (typeof window !== 'undefined') {
+      localStorage.removeItem('lf_token');
+      localStorage.removeItem('lf_user');
+    }
   }
 }

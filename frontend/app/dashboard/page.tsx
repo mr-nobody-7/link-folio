@@ -188,8 +188,8 @@ export default function DashboardPage() {
     setLinks((data as DashboardLink[]) || []);
   };
 
-  const handleLogout = () => {
-    clearToken();
+  const handleLogout = async () => {
+    await clearToken();
     router.push('/');
   };
 
@@ -404,7 +404,7 @@ export default function DashboardPage() {
             <p className="text-sm text-[#888888]">Manage your profile and links</p>
           </div>
           <Button
-            onClick={handleLogout}
+            onClick={() => void handleLogout()}
             className="bg-[#ec5c33] hover:bg-[#d54a29] text-white"
           >
             Logout
