@@ -9,6 +9,7 @@ export interface IUser extends Document {
   bio?: string;
   avatarUrl?: string;
   theme?: string;
+  refreshToken?: string;
   views?: number;
   joinedAt: Date;
 }
@@ -54,6 +55,10 @@ const userSchema = new Schema<IUser>({
     type: String,
     trim: true,
     default: 'default',
+  },
+  refreshToken: {
+    type: String,
+    default: null,
   },
   views: {
     type: Number,
