@@ -2,9 +2,6 @@
 
 import {
   getLinks,
-  createLink,
-  updateLinks,
-  deleteLink,
   updateProfile,
   getToken,
   clearToken,
@@ -13,7 +10,7 @@ import {
   getAnalytics,
 } from '@/api/linkfolioApi';
 import { useRouter } from 'next/navigation';
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -30,10 +27,10 @@ import {
   SortableContext,
   sortableKeyboardCoordinates,
   verticalListSortingStrategy,
-  arrayMove,
 } from '@dnd-kit/sortable';
 import SortableLinkItem from '@/components/dashboard/SortableLinkItem';
 import AnalyticsCard from '@/components/dashboard/AnalyticsCard';
+import useLinks from '@/hooks/useLinks';
 
 type DashboardUser = {
   id?: string;
@@ -83,9 +80,19 @@ type DashboardAnalytics = {
 
 export default function DashboardPage() {
   const router = useRouter();
+  const initialLinksRef = useRef<DashboardLink[]>([]);
+  const {
+    links,
+    error: linkError,
+    optimisticToggle,
+    optimisticDelete,
+    optimisticEdit,
+    optimisticReorder,
+    addLink,
+    setLinks,
+  } = useLinks(initialLinksRef.current);
 
   const [user, setUser] = useState<DashboardUser | null>(null);
-  const [links, setLinks] = useState<DashboardLink[]>([]);
   const [messages, setMessages] = useState<DashboardMessage[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -158,7 +165,9 @@ export default function DashboardPage() {
           bio: profileUser?.bio || '',
           avatarUrl: profileUser?.avatarUrl || '',
         });
-        setLinks((linksRes as DashboardLink[]) || []);
+        const fetchedLinks = (linksRes as DashboardLink[]) || [];
+        initialLinksRef.current = fetchedLinks;
+        setLinks(fetchedLinks);
         setAnalyticsData((analyticsRes as DashboardAnalytics) || null);
         setAnalyticsDays(7);
 
@@ -182,11 +191,6 @@ export default function DashboardPage() {
 
     void loadData();
   }, [router]);
-
-  const refreshLinks = async () => {
-    const data = await getLinks();
-    setLinks((data as DashboardLink[]) || []);
-  };
 
   const handleLogout = async () => {
     await clearToken();
@@ -219,114 +223,16 @@ export default function DashboardPage() {
     }
 
     try {
-      await createLink({
+      await addLink({
         title: newLinkForm.title.trim(),
         url: newLinkForm.url.trim(),
         isTemporary: newLinkForm.isTemporary,
       });
       setNewLinkForm({ title: '', url: '', isTemporary: false });
       setShowAddLink(false);
-      await refreshLinks();
     } catch (requestError) {
       const message =
         requestError instanceof Error ? requestError.message : 'Failed to add link';
-      setError(message);
-    }
-  };
-
-  const handleDeleteLink = async (link: DashboardLink) => {
-    const targetId = link._id || link.id;
-    if (!targetId) return;
-
-    try {
-      await deleteLink(targetId);
-      setLinks((prev) => prev.filter((item) => (item._id || item.id) !== targetId));
-    } catch (requestError) {
-      const message =
-        requestError instanceof Error
-          ? requestError.message
-          : 'Failed to delete link';
-      setError(message);
-    }
-  };
-
-  const handleToggleLinkEnabled = async (linkId: string, enabled: boolean) => {
-    try {
-      const updatedLinks = links.map((link) => {
-        const id = link._id || link.id;
-        if (id === linkId) {
-          return { ...link, enabled };
-        }
-        return link;
-      });
-
-      await updateLinks(
-        updatedLinks.map((link) => ({
-          _id: link._id || link.id,
-          title: link.title,
-          url: link.url,
-          enabled: link.enabled,
-          order: link.order,
-          isTemporary: link.isTemporary,
-        }))
-      );
-
-      setLinks(updatedLinks);
-    } catch (requestError) {
-      const message =
-        requestError instanceof Error
-          ? requestError.message
-          : 'Failed to toggle link';
-      setError(message);
-    }
-  };
-
-  const handleEditLink = async (
-    linkId: string,
-    title: string,
-    url: string
-  ) => {
-    try {
-      const updatedLinks = links.map((link) => {
-        const id = link._id || link.id;
-        if (id === linkId) {
-          return { ...link, title, url };
-        }
-        return link;
-      });
-
-      await updateLinks(
-        updatedLinks.map((link) => ({
-          _id: link._id || link.id,
-          title: link.title,
-          url: link.url,
-          enabled: link.enabled,
-          order: link.order,
-          isTemporary: link.isTemporary,
-        }))
-      );
-
-      setLinks(updatedLinks);
-    } catch (requestError) {
-      const message =
-        requestError instanceof Error
-          ? requestError.message
-          : 'Failed to update link';
-      setError(message);
-    }
-  };
-
-  const handleDeleteLinkById = async (linkId: string) => {
-    try {
-      await deleteLink(linkId);
-      setLinks((prev) =>
-        prev.filter((link) => (link._id || link.id) !== linkId)
-      );
-    } catch (requestError) {
-      const message =
-        requestError instanceof Error
-          ? requestError.message
-          : 'Failed to delete link';
       setError(message);
     }
   };
@@ -362,33 +268,7 @@ export default function DashboardPage() {
 
     if (oldIndex === -1 || newIndex === -1) return;
 
-    const reordered = arrayMove(links, oldIndex, newIndex);
-    const reorderedWithOrder = reordered.map((link, index) => ({
-      ...link,
-      order: index,
-    }));
-
-    setLinks(reorderedWithOrder);
-
-    try {
-      await updateLinks(
-        reorderedWithOrder.map((link) => ({
-          _id: link._id || link.id,
-          title: link.title,
-          url: link.url,
-          enabled: link.enabled,
-          order: link.order,
-          isTemporary: link.isTemporary,
-        }))
-      );
-    } catch (requestError) {
-      const message =
-        requestError instanceof Error
-          ? requestError.message
-          : 'Failed to reorder links';
-      setError(message);
-      setLinks(links);
-    }
+    await optimisticReorder(oldIndex, newIndex);
   };
 
   if (loading) {
@@ -560,15 +440,21 @@ export default function DashboardPage() {
                   <SortableLinkItem
                     key={link._id || link.id}
                     link={link}
-                    onToggle={handleToggleLinkEnabled}
-                    onDelete={handleDeleteLinkById}
-                    onEdit={handleEditLink}
+                    onToggle={optimisticToggle}
+                    onDelete={optimisticDelete}
+                    onEdit={optimisticEdit}
                   />
                 ))}
               </div>
             </SortableContext>
           </DndContext>
         </section>
+
+        {linkError ? (
+          <div className="md:col-span-2 rounded-lg bg-red-500 text-white text-sm px-4 py-3 shadow-sm">
+            {linkError}
+          </div>
+        ) : null}
 
         <section className="md:col-span-2">
           {analyticsLoading ? (
