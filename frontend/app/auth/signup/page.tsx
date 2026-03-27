@@ -8,6 +8,18 @@ import LoadingSpinner from "@/components/common/LoadingSpinner";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 
+const RESERVED = [
+  'dashboard',
+  'login',
+  'signup',
+  'admin',
+  'api',
+  'auth',
+  'settings',
+  'me',
+  'linkfolio',
+];
+
 /**
  * Signup page: includes new field for display name.
  */
@@ -29,6 +41,12 @@ export default function SignupPage() {
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     setErr(undefined);
+
+    if (RESERVED.includes(form.username.trim().toLowerCase())) {
+      setErr('This username is not available. Please choose another.');
+      return;
+    }
+
     setLoading(true);
     try {
       await signup(form);
