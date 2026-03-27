@@ -9,6 +9,7 @@ import linksRoutes from './routes/links.routes.js';
 import analyticsRoutes from './routes/analytics.routes.js';
 import messageRoutes from './routes/message.routes.js';
 import { generalLimiter } from './middleware/rateLimiter.js';
+import { startExpireLinksJob } from './jobs/expireLinks.js';
 import {
   notFoundHandler,
   globalErrorHandler,
@@ -21,6 +22,9 @@ const PORT = process.env.PORT || 3000;
 
 // Connect to MongoDB
 connectDB();
+
+// Background jobs
+startExpireLinksJob();
 
 // Middleware
 app.use(
