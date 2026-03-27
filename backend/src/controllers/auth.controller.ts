@@ -8,6 +8,7 @@ import {
 } from '../utils/jwt.utils.js';
 import { AppError } from '../middleware/errorHandler.js';
 import { AuthRequest } from '../middleware/index.js';
+import { isReservedUsername } from '../utils/reservedUsernames.js';
 import {
   SignupRequest,
   LoginRequest,
@@ -25,6 +26,14 @@ export const signup = async (
       res.status(400).json({
         error: 'Validation error',
         message: 'email, username, password and displayName are required',
+      });
+      return;
+    }
+
+    if (isReservedUsername(username)) {
+      res.status(400).json({
+        error: 'Validation error',
+        message: 'This username is reserved',
       });
       return;
     }

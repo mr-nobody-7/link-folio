@@ -2,6 +2,7 @@ import { Request, Response } from 'express';
 import { User } from '../models/user.model.js';
 import { Link } from '../models/link.model.js';
 import { AuthRequest } from '../middleware/index.js';
+import { isReservedUsername } from '../utils/reservedUsernames.js';
 
 export const getProfile = async (
   req: Request,
@@ -70,6 +71,14 @@ export const updateProfile = async (
     }
 
     if (username !== undefined && username !== user.username) {
+      if (username && isReservedUsername(username)) {
+        res.status(400).json({
+          error: 'Validation error',
+          message: 'This username is reserved',
+        });
+        return;
+      }
+
       const existingUser = await User.findOne({
         username,
         _id: { $ne: userId },
