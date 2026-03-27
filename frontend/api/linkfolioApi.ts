@@ -172,6 +172,7 @@ export async function createLink(data: {
   title: string;
   url: string;
   isTemporary?: boolean;
+  expiresAt?: string;
 }) {
   return apiFetch('/links', {
     method: 'POST',

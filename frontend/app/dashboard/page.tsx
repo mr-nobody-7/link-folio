@@ -50,6 +50,7 @@ type DashboardLink = {
   enabled: boolean;
   order: number;
   isTemporary?: boolean;
+  expiresAt?: string;
   clicks?: number;
 };
 
@@ -114,6 +115,7 @@ export default function DashboardPage() {
     title: '',
     url: '',
     isTemporary: false,
+    expiresAt: '',
   });
 
   const sensors = useSensors(
@@ -238,8 +240,12 @@ export default function DashboardPage() {
         title: newLinkForm.title.trim(),
         url: newLinkForm.url.trim(),
         isTemporary: newLinkForm.isTemporary,
+        expiresAt:
+          newLinkForm.isTemporary && newLinkForm.expiresAt
+            ? new Date(newLinkForm.expiresAt).toISOString()
+            : undefined,
       });
-      setNewLinkForm({ title: '', url: '', isTemporary: false });
+      setNewLinkForm({ title: '', url: '', isTemporary: false, expiresAt: '' });
       setShowAddLink(false);
     } catch (requestError) {
       const message =
@@ -413,11 +419,28 @@ export default function DashboardPage() {
                     setNewLinkForm((prev) => ({
                       ...prev,
                       isTemporary: e.target.checked,
+                      expiresAt: e.target.checked ? prev.expiresAt : '',
                     }))
                   }
                 />
-                Temporary link
+                Temporary link (expires in 24 hours)
               </label>
+              {newLinkForm.isTemporary ? (
+                <div className="space-y-1">
+                  <label className="text-xs text-[#888888]">Custom expiry</label>
+                  <Input
+                    type="datetime-local"
+                    value={newLinkForm.expiresAt}
+                    onChange={(e) =>
+                      setNewLinkForm((prev) => ({
+                        ...prev,
+                        expiresAt: e.target.value,
+                      }))
+                    }
+                  />
+                  <p className="text-xs text-[#888888]">Leave empty to expire in 24h</p>
+                </div>
+              ) : null}
               <Button type="submit" className="bg-[#ec5c33] hover:bg-[#d54a29] text-white">Save</Button>
             </form>
           ) : null}

@@ -10,6 +10,7 @@ export type LinkItem = {
   enabled: boolean;
   order: number;
   isTemporary?: boolean;
+  expiresAt?: string;
   clicks?: number;
 };
 
@@ -17,6 +18,7 @@ type AddLinkInput = {
   title: string;
   url: string;
   isTemporary?: boolean;
+  expiresAt?: string;
 };
 
 function getLinkId(link: LinkItem): string {
@@ -164,6 +166,7 @@ export default function useLinks(initialLinks: LinkItem[]) {
             ? createdLink.order
             : currentMaxOrder + 1,
         isTemporary: createdLink?.isTemporary ?? linkData.isTemporary,
+        expiresAt: createdLink?.expiresAt ?? linkData.expiresAt,
         clicks: createdLink?.clicks ?? 0,
       };
 

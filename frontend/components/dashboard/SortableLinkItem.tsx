@@ -14,8 +14,24 @@ type LinkData = {
   enabled: boolean;
   order?: number;
   isTemporary?: boolean;
+  expiresAt?: string;
   clicks?: number;
 };
+
+function timeUntil(date: string): string {
+  const targetTime = new Date(date).getTime();
+  const diffMs = targetTime - Date.now();
+
+  if (Number.isNaN(targetTime) || diffMs <= 0) {
+    return 'Expired';
+  }
+
+  const totalMinutes = Math.floor(diffMs / (1000 * 60));
+  const hours = Math.floor(totalMinutes / 60);
+  const minutes = totalMinutes % 60;
+
+  return `in ${hours}h ${minutes}m`;
+}
 
 interface SortableLinkItemProps {
   link: LinkData;
@@ -154,9 +170,16 @@ export default function SortableLinkItem({
 
         {/* Clicks Badge */}
         {!isEditing && (
-          <span className="text-xs bg-[#ec5c33]/10 text-[#ec5c33] px-2 py-1 rounded-full whitespace-nowrap">
-            {link.clicks || 0} clicks
-          </span>
+          <div className="flex flex-col gap-1 items-end">
+            <span className="text-xs bg-[#ec5c33]/10 text-[#ec5c33] px-2 py-1 rounded-full whitespace-nowrap">
+              {link.clicks || 0} clicks
+            </span>
+            {link.isTemporary ? (
+              <span className="text-xs bg-gray-100 text-gray-600 px-2 py-1 rounded-full whitespace-nowrap">
+                Expires {link.expiresAt ? timeUntil(link.expiresAt) : 'in 24h'}
+              </span>
+            ) : null}
+          </div>
         )}
       </div>
 
