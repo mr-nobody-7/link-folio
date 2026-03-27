@@ -36,7 +36,7 @@ export const createLink = async (
 ): Promise<void> => {
   try {
     const userId = req.user?.userId;
-    const { title, url, isTemporary }: CreateLinkRequest = req.body;
+    const { title, url, isTemporary, expiresAt }: CreateLinkRequest = req.body;
 
     if (!userId) {
       res.status(401).json({
@@ -57,13 +57,33 @@ export const createLink = async (
     const linksCount = await Link.countDocuments({ userId });
     const order = linksCount + 1;
 
+    const temporary = Boolean(isTemporary);
+    let resolvedExpiresAt: Date | null = null;
+
+    if (temporary) {
+      if (expiresAt) {
+        const parsedExpiry = new Date(expiresAt);
+        if (Number.isNaN(parsedExpiry.getTime())) {
+          res.status(400).json({
+            error: 'Validation error',
+            message: 'expiresAt must be a valid datetime',
+          });
+          return;
+        }
+        resolvedExpiresAt = parsedExpiry;
+      } else {
+        resolvedExpiresAt = new Date(Date.now() + 24 * 60 * 60 * 1000);
+      }
+    }
+
     const newLink = new Link({
       userId,
       title,
       url,
       enabled: true,
       order,
-      isTemporary: isTemporary || false,
+      isTemporary: temporary,
+      expiresAt: temporary ? resolvedExpiresAt : null,
     });
 
     await newLink.save();

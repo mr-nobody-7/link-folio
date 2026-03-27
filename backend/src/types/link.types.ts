@@ -3,6 +3,7 @@ export interface CreateLinkRequest {
   url: string;
   enabled: boolean;
   isTemporary?: boolean;
+  expiresAt?: string;
 }
 
 export interface LinkResponse {
@@ -12,6 +13,7 @@ export interface LinkResponse {
   enabled: boolean;
   order: number;
   isTemporary?: boolean;
+  expiresAt?: string;
   clicks: number;
 }
 

@@ -8,6 +8,7 @@ export interface ILink extends Document {
   enabled: boolean;
   order: number;
   isTemporary?: boolean;
+  expiresAt?: Date;
   clicks: number;
   createdAt: Date;
   updatedAt: Date;
@@ -43,6 +44,10 @@ const linkSchema = new Schema<ILink>(
       type: Boolean,
       default: false,
     },
+    expiresAt: {
+      type: Date,
+      default: null,
+    },
     clicks: {
       type: Number,
       default: 0,
@@ -52,5 +57,7 @@ const linkSchema = new Schema<ILink>(
     timestamps: true, // Adds createdAt and updatedAt automatically
   }
 );
+
+linkSchema.index({ expiresAt: 1 }, { sparse: true });
 
 export const Link = mongoose.model<ILink>('Link', linkSchema);
