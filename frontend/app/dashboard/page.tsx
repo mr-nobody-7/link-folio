@@ -116,6 +116,17 @@ export default function DashboardPage() {
     isTemporary: false,
   });
 
+  const sensors = useSensors(
+    useSensor(PointerSensor, {
+      activationConstraint: {
+        distance: 8,
+      },
+    }),
+    useSensor(KeyboardSensor, {
+      coordinateGetter: sortableKeyboardCoordinates,
+    })
+  );
+
   useEffect(() => {
     const token = getToken();
     if (!token) {
@@ -418,16 +429,7 @@ export default function DashboardPage() {
           ) : null}
 
           <DndContext
-            sensors={useSensors(
-              useSensor(PointerSensor, {
-                activationConstraint: {
-                  distance: 8,
-                },
-              }),
-              useSensor(KeyboardSensor, {
-                coordinateGetter: sortableKeyboardCoordinates,
-              })
-            )}
+            sensors={sensors}
             collisionDetection={closestCenter}
             onDragEnd={handleDragEnd}
           >
