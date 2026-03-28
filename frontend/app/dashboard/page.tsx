@@ -3,6 +3,7 @@
 import {
   getLinks,
   updateProfile,
+  uploadAvatar,
   getToken,
   clearToken,
   getProfile,
@@ -82,6 +83,8 @@ type DashboardAnalytics = {
 export default function DashboardPage() {
   const router = useRouter();
   const initialLinksRef = useRef<DashboardLink[]>([]);
+  const fileInputRef = useRef<HTMLInputElement | null>(null);
+  const avatarPreviewUrlRef = useRef<string | null>(null);
   const {
     links,
     error: linkError,
@@ -104,6 +107,7 @@ export default function DashboardPage() {
   const [analyticsLoading, setAnalyticsLoading] = useState(false);
 
   const [showEditProfile, setShowEditProfile] = useState(false);
+  const [avatarUploading, setAvatarUploading] = useState(false);
   const [profileForm, setProfileForm] = useState({
     displayName: '',
     bio: '',
@@ -205,6 +209,14 @@ export default function DashboardPage() {
     void loadData();
   }, [router]);
 
+  useEffect(() => {
+    return () => {
+      if (avatarPreviewUrlRef.current) {
+        URL.revokeObjectURL(avatarPreviewUrlRef.current);
+      }
+    };
+  }, []);
+
   const handleLogout = async () => {
     await clearToken();
     router.push('/');
@@ -225,6 +237,85 @@ export default function DashboardPage() {
           ? requestError.message
           : 'Failed to update profile';
       setError(message);
+    }
+  };
+
+  const handleAvatarChange = async (
+    event: React.ChangeEvent<HTMLInputElement>
+  ) => {
+    const file = event.target.files?.[0];
+    if (!file) {
+      return;
+    }
+
+    if (!file.type.startsWith('image/')) {
+      setError('Please select a valid image file');
+      event.target.value = '';
+      return;
+    }
+
+    if (file.size > 5 * 1024 * 1024) {
+      setError('Image size must be 5MB or less');
+      event.target.value = '';
+      return;
+    }
+
+    const previousAvatarUrl = profileForm.avatarUrl;
+    const previewUrl = URL.createObjectURL(file);
+
+    if (avatarPreviewUrlRef.current) {
+      URL.revokeObjectURL(avatarPreviewUrlRef.current);
+    }
+    avatarPreviewUrlRef.current = previewUrl;
+
+    setProfileForm((prev) => ({
+      ...prev,
+      avatarUrl: previewUrl,
+    }));
+
+    setAvatarUploading(true);
+    setError(null);
+
+    try {
+      const result = await uploadAvatar(file);
+
+      if (avatarPreviewUrlRef.current) {
+        URL.revokeObjectURL(avatarPreviewUrlRef.current);
+        avatarPreviewUrlRef.current = null;
+      }
+
+      setProfileForm((prev) => ({
+        ...prev,
+        avatarUrl: result.avatarUrl,
+      }));
+      setUser((prev) => {
+        if (!prev) {
+          return prev;
+        }
+        return {
+          ...prev,
+          avatarUrl: result.avatarUrl,
+        };
+      });
+    } catch (requestError) {
+      if (avatarPreviewUrlRef.current) {
+        URL.revokeObjectURL(avatarPreviewUrlRef.current);
+        avatarPreviewUrlRef.current = null;
+      }
+
+      setProfileForm((prev) => ({
+        ...prev,
+        avatarUrl: previousAvatarUrl,
+      }));
+
+      const message =
+        requestError instanceof Error
+          ? requestError.message
+          : 'Failed to upload image';
+      setError(message);
+    } finally {
+      setAvatarUploading(false);
+      event.target.value = '';
     }
   };
 
@@ -356,6 +447,50 @@ export default function DashboardPage() {
 
           {showEditProfile ? (
             <form onSubmit={handleProfileSave} className="mt-4 grid gap-3 p-4 rounded-xl bg-[#f8f8f8] border border-gray-200">
+              <div className="flex items-center gap-4">
+                <div className="relative w-20 h-20">
+                  {profileForm.avatarUrl ? (
+                    <img
+                      src={profileForm.avatarUrl}
+                      alt={profileForm.displayName || user?.username || 'Avatar'}
+                      className="w-20 h-20 rounded-full object-cover"
+                    />
+                  ) : (
+                    <div className="w-20 h-20 rounded-full bg-[#ec5c33]/15 text-[#ec5c33] text-2xl font-bold flex items-center justify-center">
+                      {(profileForm.displayName || user?.username || 'U')
+                        .charAt(0)
+                        .toUpperCase()}
+                    </div>
+                  )}
+
+                  {avatarUploading ? (
+                    <div className="absolute inset-0 rounded-full bg-black/35 flex items-center justify-center">
+                      <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                    </div>
+                  ) : null}
+                </div>
+
+                <div>
+                  <input
+                    ref={fileInputRef}
+                    type="file"
+                    accept="image/*"
+                    onChange={handleAvatarChange}
+                    className="hidden"
+                  />
+                  <Button
+                    type="button"
+                    variant="outline"
+                    className="border-[#ec5c33]/35 text-[#ec5c33] hover:bg-[#ec5c33]/5"
+                    onClick={() => fileInputRef.current?.click()}
+                    disabled={avatarUploading}
+                  >
+                    {avatarUploading ? 'Uploading...' : 'Change photo'}
+                  </Button>
+                  <p className="text-xs text-[#888888] mt-2">PNG, JPG, WEBP, or GIF up to 5MB</p>
+                </div>
+              </div>
+
               <Input
                 placeholder="Display Name"
                 value={profileForm.displayName}
@@ -367,13 +502,6 @@ export default function DashboardPage() {
                 placeholder="Bio"
                 value={profileForm.bio}
                 onChange={(e) => setProfileForm((prev) => ({ ...prev, bio: e.target.value }))}
-              />
-              <Input
-                placeholder="Avatar URL"
-                value={profileForm.avatarUrl}
-                onChange={(e) =>
-                  setProfileForm((prev) => ({ ...prev, avatarUrl: e.target.value }))
-                }
               />
               <div>
                 <Button type="submit" className="bg-[#ec5c33] hover:bg-[#d54a29] text-white">

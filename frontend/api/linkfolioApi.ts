@@ -162,6 +162,40 @@ export async function updateProfile(
   });
 }
 
+export async function uploadAvatar(file: File): Promise<{ avatarUrl: string }> {
+  const token =
+    typeof window !== 'undefined' ? localStorage.getItem('lf_token') : null;
+
+  if (!token) {
+    throw new Error('Session expired. Please log in again.');
+  }
+
+  const form = new FormData();
+  form.append('avatar', file);
+
+  const response = await fetch(`${BASE_URL}/upload/avatar`, {
+    method: 'POST',
+    headers: {
+      Authorization: `Bearer ${token}`,
+    },
+    body: form,
+    credentials: 'include',
+  });
+
+  let data: any = {};
+  try {
+    data = await response.json();
+  } catch {
+    data = {};
+  }
+
+  if (!response.ok) {
+    throw new Error(data.message || data.error || 'Failed to upload image');
+  }
+
+  return data as { avatarUrl: string };
+}
+
 export async function getLinks() {
   return apiFetch('/links', {
     method: 'GET',
