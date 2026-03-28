@@ -8,6 +8,7 @@ import profileRoutes from './routes/profile.routes.js';
 import linksRoutes from './routes/links.routes.js';
 import analyticsRoutes from './routes/analytics.routes.js';
 import messageRoutes from './routes/message.routes.js';
+import uploadRoutes from './routes/upload.routes.js';
 import { generalLimiter } from './middleware/rateLimiter.js';
 import { startExpireLinksJob } from './jobs/expireLinks.js';
 import {
@@ -47,6 +48,7 @@ app.use('/profile', profileRoutes);
 app.use('/links', linksRoutes);
 app.use('/analytics', analyticsRoutes);
 app.use('/messages', messageRoutes);
+app.use('/upload', uploadRoutes);
 
 app.use(notFoundHandler);
 app.use(globalErrorHandler);
