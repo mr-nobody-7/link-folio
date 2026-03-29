@@ -112,6 +112,7 @@ export default function DashboardPage() {
     displayName: '',
     bio: '',
     avatarUrl: '',
+    theme: 'default',
   });
 
   const [showAddLink, setShowAddLink] = useState(false);
@@ -181,6 +182,7 @@ export default function DashboardPage() {
           displayName: profileUser?.displayName || '',
           bio: profileUser?.bio || '',
           avatarUrl: profileUser?.avatarUrl || '',
+          theme: profileUser?.theme || 'default',
         });
         const fetchedLinks = (linksRes as DashboardLink[]) || [];
         initialLinksRef.current = fetchedLinks;
@@ -503,6 +505,20 @@ export default function DashboardPage() {
                 value={profileForm.bio}
                 onChange={(e) => setProfileForm((prev) => ({ ...prev, bio: e.target.value }))}
               />
+              <div className="space-y-1">
+                <label className="text-xs text-[#888888]">Theme</label>
+                <select
+                  value={profileForm.theme}
+                  onChange={(e) =>
+                    setProfileForm((prev) => ({ ...prev, theme: e.target.value }))
+                  }
+                  className="w-full rounded-xl border border-[#ec5c33]/30 bg-white px-3 py-2 text-sm text-[#504d46]"
+                >
+                  <option value="default">Default</option>
+                  <option value="midnight">Midnight</option>
+                  <option value="sunset">Sunset</option>
+                </select>
+              </div>
               <div>
                 <Button type="submit" className="bg-[#ec5c33] hover:bg-[#d54a29] text-white">
                   Save Profile
