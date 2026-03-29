@@ -16,6 +16,25 @@ bun dev
 
 Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
 
+## Environment Variables
+
+Create `frontend/.env.local` with:
+
+```bash
+NEXT_PUBLIC_APP_URL=http://localhost:3000
+```
+
+Use your deployed domain in production, for example:
+
+```bash
+NEXT_PUBLIC_APP_URL=https://yourdomain.com
+```
+
+## Open Graph Fallback Image
+
+`public/og-default.png` is used as the fallback Open Graph image.
+Replace this placeholder with a proper branded OG image before deploying.
+
 You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
 
 This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
