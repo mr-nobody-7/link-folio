@@ -11,7 +11,9 @@ if (!MONGODB_URI) {
 
 export const connectDB = async (): Promise<void> => {
   try {
-    await mongoose.connect(MONGODB_URI);
+    await mongoose.connect(MONGODB_URI, {
+      autoIndex: true,
+    });
     console.log('MongoDB connected successfully');
   } catch (error) {
     console.error('MongoDB connection error:', error);
