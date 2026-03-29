@@ -28,9 +28,12 @@ const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000';
 const APP_BASE_URL = process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000';
 
 async function fetchProfile(username: string): Promise<ProfileResponse | null> {
-  const res = await fetch(`${API_BASE_URL}/profile/${username}`, {
+  const res = await fetch(
+    `${API_BASE_URL}/profile/${encodeURIComponent(username)}`,
+    {
     next: { revalidate: 60 },
-  });
+    }
+  );
 
   if (!res.ok) {
     return null;
