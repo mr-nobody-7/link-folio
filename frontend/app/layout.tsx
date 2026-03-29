@@ -16,18 +16,26 @@ export const metadata: Metadata = {
   title: "LinkFolio - Beautiful Link-in-Bio",
   description:
     "Build your own beautiful link-in-bio site in seconds. No code. Just you.",
+  metadataBase: new URL(
+    process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'
+  ),
   authors: [{ name: "LinkFolio" }],
   openGraph: {
     title: "LinkFolio - Beautiful Link-in-Bio",
     description:
       "Build your own beautiful link-in-bio site in seconds. No code. Just you.",
     type: "website",
-    images: ["https://lovable.dev/opengraph-image-p98pqg.png"],
+    siteName: 'LinkFolio',
+    images: ['/og-default.png'],
   },
   twitter: {
     card: "summary_large_image",
-    site: "@lovable_dev",
-    images: ["https://lovable.dev/opengraph-image-p98pqg.png"],
+    site: '@linkfolio',
+    images: ['/og-default.png'],
+  },
+  robots: {
+    index: true,
+    follow: true,
   },
 };
 
