@@ -58,6 +58,16 @@ const linkSchema = new Schema<ILink>(
   }
 );
 
-linkSchema.index({ expiresAt: 1 }, { sparse: true });
+// Primary profile-page query path: list links for a user in display order.
+linkSchema.index({ userId: 1, order: 1 });
+
+// Public profile path with enabled filter and stable ordering.
+linkSchema.index({ userId: 1, enabled: 1, order: 1 });
+
+// Supports expiration job scans for temporary, still-enabled links.
+linkSchema.index({ isTemporary: 1, enabled: 1, expiresAt: 1 }, { sparse: true });
+
+// Supports top-clicked link sorting per user.
+linkSchema.index({ userId: 1, clicks: -1 });
 
 export const Link = mongoose.model<ILink>('Link', linkSchema);

@@ -70,4 +70,10 @@ const userSchema = new Schema<IUser>({
   },
 });
 
+// Explicitly documenting profile lookup path.
+userSchema.index({ username: 1 }, { unique: true });
+
+// Supports newest-user sorting/filtering use-cases.
+userSchema.index({ joinedAt: -1 });
+
 export const User = mongoose.model<IUser>('User', userSchema);

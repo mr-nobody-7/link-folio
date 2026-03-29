@@ -12,4 +12,6 @@ const visitorMessageSchema = new Schema<IVisitorMessage>({
   createdAt: { type: Date, default: Date.now },
 });
 
+visitorMessageSchema.index({ username: 1, createdAt: -1 });
+
 export const VisitorMessage = mongoose.model<IVisitorMessage>('VisitorMessage', visitorMessageSchema);
