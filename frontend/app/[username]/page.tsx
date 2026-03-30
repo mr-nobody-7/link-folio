@@ -27,11 +27,28 @@ type ProfileResponse = {
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000';
 const APP_BASE_URL = process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000';
 
-async function fetchProfile(username: string): Promise<ProfileResponse | null> {
+async function fetchProfileForMetadata(
+  username: string
+): Promise<ProfileResponse | null> {
   const res = await fetch(
     `${API_BASE_URL}/profile/${encodeURIComponent(username)}`,
     {
-    next: { revalidate: 60 },
+      next: { revalidate: 60 },
+    }
+  );
+
+  if (!res.ok) {
+    return null;
+  }
+
+  return (await res.json()) as ProfileResponse;
+}
+
+async function fetchProfileForPage(username: string): Promise<ProfileResponse | null> {
+  const res = await fetch(
+    `${API_BASE_URL}/profile/${encodeURIComponent(username)}`,
+    {
+      cache: 'no-store',
     }
   );
 
@@ -49,7 +66,7 @@ export async function generateMetadata({
 }): Promise<Metadata> {
   try {
     const { username } = await params;
-    const profile = await fetchProfile(username);
+    const profile = await fetchProfileForMetadata(username);
 
     if (!profile) {
       return {
@@ -106,7 +123,7 @@ export default async function PublicProfilePage({
   params: Promise<{ username: string }>;
 }) {
   const { username } = await params;
-  const profile = await fetchProfile(username);
+  const profile = await fetchProfileForPage(username);
 
   if (!profile) {
     notFound();
