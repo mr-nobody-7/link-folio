@@ -32,6 +32,7 @@ export default function ProfileClient({ user, links }: ProfileClientProps) {
   const [content, setContent] = useState('');
   const [messageStatus, setMessageStatus] = useState<string | null>(null);
   const [sending, setSending] = useState(false);
+  const [hoveredLink, setHoveredLink] = useState<string | null>(null);
 
   useEffect(() => {
     void recordProfileView(user.username);
@@ -124,11 +125,16 @@ export default function ProfileClient({ user, links }: ProfileClientProps) {
               key={link._id}
               className="w-full text-left border px-4 py-3 hover:-translate-y-0.5 transition-all"
               style={{
-                backgroundColor: 'var(--lf-card-bg)',
+                backgroundColor:
+                  hoveredLink === link._id
+                    ? 'var(--lf-card-hover)'
+                    : 'var(--lf-card-bg)',
                 border: '1px solid var(--lf-card-border)',
                 borderRadius: 'var(--lf-radius)',
                 boxShadow: 'var(--lf-shadow)',
               }}
+              onMouseEnter={() => setHoveredLink(link._id)}
+              onMouseLeave={() => setHoveredLink(null)}
               onClick={() => {
                 void recordLinkClick(link._id, user.username);
                 window.open(link.url, '_blank', 'noopener,noreferrer');
