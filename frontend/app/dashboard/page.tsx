@@ -108,6 +108,7 @@ export default function DashboardPage() {
 
   const [showEditProfile, setShowEditProfile] = useState(false);
   const [avatarUploading, setAvatarUploading] = useState(false);
+  const [themeSaving, setThemeSaving] = useState(false);
   const [profileForm, setProfileForm] = useState({
     displayName: '',
     bio: '',
@@ -239,6 +240,32 @@ export default function DashboardPage() {
           ? requestError.message
           : 'Failed to update profile';
       setError(message);
+    }
+  };
+
+  const handleThemeChange = async (themeId: string) => {
+    try {
+      setThemeSaving(true);
+      const updated = (await updateProfile({ theme: themeId })) as DashboardUser;
+      setUser((prev) => {
+        if (!prev) {
+          return prev;
+        }
+
+        return {
+          ...prev,
+          ...updated,
+          theme: updated.theme || themeId,
+        };
+      });
+    } catch (requestError) {
+      const message =
+        requestError instanceof Error
+          ? requestError.message
+          : 'Failed to update theme';
+      setError(message);
+    } finally {
+      setThemeSaving(false);
     }
   };
 
