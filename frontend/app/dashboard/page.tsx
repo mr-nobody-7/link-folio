@@ -31,6 +31,7 @@ import {
 } from '@dnd-kit/sortable';
 import SortableLinkItem from '@/components/dashboard/SortableLinkItem';
 import AnalyticsCard from '@/components/dashboard/AnalyticsCard';
+import ThemePicker from '@/components/dashboard/ThemePicker';
 import useLinks from '@/hooks/useLinks';
 
 type DashboardUser = {
@@ -532,20 +533,11 @@ export default function DashboardPage() {
                 value={profileForm.bio}
                 onChange={(e) => setProfileForm((prev) => ({ ...prev, bio: e.target.value }))}
               />
-              <div className="space-y-1">
-                <label className="text-xs text-[#888888]">Theme</label>
-                <select
-                  value={profileForm.theme}
-                  onChange={(e) =>
-                    setProfileForm((prev) => ({ ...prev, theme: e.target.value }))
-                  }
-                  className="w-full rounded-xl border border-[#ec5c33]/30 bg-white px-3 py-2 text-sm text-[#504d46]"
-                >
-                  <option value="default">Default</option>
-                  <option value="midnight">Midnight</option>
-                  <option value="sunset">Sunset</option>
-                </select>
-              </div>
+              <ThemePicker
+                currentTheme={user?.theme || 'default'}
+                onThemeChange={handleThemeChange}
+                saving={themeSaving}
+              />
               <div>
                 <Button type="submit" className="bg-[#ec5c33] hover:bg-[#d54a29] text-white">
                   Save Profile
