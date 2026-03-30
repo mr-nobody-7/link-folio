@@ -259,6 +259,10 @@ export default function DashboardPage() {
           theme: updated.theme || themeId,
         };
       });
+      setProfileForm((prev) => ({
+        ...prev,
+        theme: updated.theme || themeId,
+      }));
     } catch (requestError) {
       const message =
         requestError instanceof Error
@@ -538,6 +542,19 @@ export default function DashboardPage() {
                 onThemeChange={handleThemeChange}
                 saving={themeSaving}
               />
+              <button
+                type="button"
+                className="w-fit text-sm text-[#ec5c33] hover:underline"
+                onClick={() => {
+                  if (!user?.username) {
+                    return;
+                  }
+
+                  window.open(`/${user.username}`, '_blank');
+                }}
+              >
+                See how your profile looks →
+              </button>
               <div>
                 <Button type="submit" className="bg-[#ec5c33] hover:bg-[#d54a29] text-white">
                   Save Profile
