@@ -17,6 +17,13 @@ function trimText(value: string, maxLength: number): string {
   return `${value.slice(0, maxLength - 1)}…`;
 }
 
+function toSafeFilename(value: string): string {
+  const normalized = value.trim().toLowerCase().replace(/[^a-z0-9_-]+/g, '-');
+  const compact = normalized.replace(/-+/g, '-').replace(/^-|-$/g, '');
+
+  return compact || 'profile';
+}
+
 export default function QRCodeCard({ username, displayName }: QRCodeCardProps) {
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
   const [loading, setLoading] = useState(true);
@@ -111,7 +118,7 @@ export default function QRCodeCard({ username, displayName }: QRCodeCardProps) {
 
     const link = document.createElement('a');
     link.href = downloadCanvas.toDataURL('image/png');
-    link.download = `${username || 'profile'}-qr.png`;
+    link.download = `${toSafeFilename(username)}-qr.png`;
     link.click();
   };
 
