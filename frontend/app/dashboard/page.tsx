@@ -32,6 +32,7 @@ import {
 import SortableLinkItem from '@/components/dashboard/SortableLinkItem';
 import AnalyticsCard from '@/components/dashboard/AnalyticsCard';
 import ThemePicker from '@/components/dashboard/ThemePicker';
+import QRCodeCard from '@/components/dashboard/QRCodeCard';
 import useLinks from '@/hooks/useLinks';
 
 type DashboardUser = {
@@ -654,6 +655,11 @@ export default function DashboardPage() {
             </SortableContext>
           </DndContext>
         </section>
+
+        <QRCodeCard
+          username={user?.username || ''}
+          displayName={user?.displayName || user?.username || ''}
+        />
 
         {linkError ? (
           <div className="md:col-span-2 rounded-lg bg-red-500 text-white text-sm px-4 py-3 shadow-sm">
