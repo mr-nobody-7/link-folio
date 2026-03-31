@@ -2,6 +2,33 @@ const BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000';
 
 type FetchOptions = RequestInit;
 
+type ApiErrorPayload = {
+  message?: string;
+  error?: string;
+};
+
+type LinkUpdatePayload = {
+  _id?: string;
+  title: string;
+  url: string;
+  enabled: boolean;
+  order?: number;
+  isTemporary?: boolean;
+};
+
+function toApiErrorPayload(value: unknown): ApiErrorPayload {
+  if (!value || typeof value !== 'object') {
+    return {};
+  }
+
+  const payload = value as Record<string, unknown>;
+
+  return {
+    message: typeof payload.message === 'string' ? payload.message : undefined,
+    error: typeof payload.error === 'string' ? payload.error : undefined,
+  };
+}
+
 function decodeBase64Url(value: string): string {
   const normalized = value.replace(/-/g, '+').replace(/_/g, '/');
   const padded = normalized + '='.repeat((4 - (normalized.length % 4)) % 4);
@@ -90,9 +117,9 @@ async function apiFetch(path: string, options: FetchOptions = {}) {
     return response.json();
   }
 
-  let data: any = {};
+  let data: ApiErrorPayload = {};
   try {
-    data = await response.json();
+    data = toApiErrorPayload(await response.json());
   } catch {
     data = {};
   }
@@ -182,9 +209,9 @@ export async function uploadAvatar(file: File): Promise<{ avatarUrl: string }> {
     credentials: 'include',
   });
 
-  let data: any = {};
+  let data: ApiErrorPayload = {};
   try {
-    data = await response.json();
+    data = toApiErrorPayload(await response.json());
   } catch {
     data = {};
   }
@@ -214,7 +241,7 @@ export async function createLink(data: {
   });
 }
 
-export async function updateLinks(links: any[]) {
+export async function updateLinks(links: LinkUpdatePayload[]) {
   return apiFetch('/links', {
     method: 'PUT',
     body: JSON.stringify({ links }),

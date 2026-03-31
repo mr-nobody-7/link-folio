@@ -51,8 +51,8 @@ export default function SignupPage() {
     try {
       await signup(form);
       router.push("/dashboard");
-    } catch (e: any) {
-      setErr(e.message);
+    } catch (e: unknown) {
+      setErr(e instanceof Error ? e.message : 'Signup failed');
     } finally {
       setLoading(false);
     }

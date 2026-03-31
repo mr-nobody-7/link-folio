@@ -25,8 +25,8 @@ export default function LoginPage() {
     try {
       await login(form);
       router.push("/dashboard");
-    } catch (e: any) {
-      setErr(e.message);
+    } catch (e: unknown) {
+      setErr(e instanceof Error ? e.message : 'Login failed');
     } finally {
       setLoading(false);
     }
@@ -63,7 +63,7 @@ export default function LoginPage() {
           </Button>
         </form>
         <div className="text-center mt-6 text-sm text-[#504d46]">
-          Don't have an account?{" "}
+          Don&apos;t have an account?{" "}
           <Link href="/auth/signup" className="text-[#ec5c33] underline hover:text-[#d54a29]">Sign up</Link>
         </div>
       </div>

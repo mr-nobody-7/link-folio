@@ -3,6 +3,7 @@
 import type { CSSProperties } from 'react';
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
+import Image from 'next/image';
 import { postMessage, recordLinkClick, recordProfileView } from '@/api/linkfolioApi';
 import { getTheme } from '@/lib/themes';
 
@@ -78,9 +79,12 @@ export default function ProfileClient({ user, links }: ProfileClientProps) {
     >
       <div className="max-w-md mx-auto text-center">
         {user.avatarUrl ? (
-          <img
+          <Image
             src={user.avatarUrl}
             alt={displayName}
+            width={80}
+            height={80}
+            unoptimized
             className="w-20 h-20 rounded-full object-cover mx-auto mb-4"
           />
         ) : (

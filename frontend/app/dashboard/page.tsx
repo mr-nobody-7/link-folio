@@ -13,12 +13,14 @@ import {
 import { useRouter } from 'next/navigation';
 import { useState, useEffect, useRef } from 'react';
 import Link from 'next/link';
+import Image from 'next/image';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import DashboardSkeleton from '@/components/dashboard/DashboardSkeleton';
 import {
   DndContext,
   closestCenter,
+  type DragEndEvent,
   KeyboardSensor,
   PointerSensor,
   useSensor,
@@ -212,7 +214,7 @@ export default function DashboardPage() {
     };
 
     void loadData();
-  }, [router]);
+  }, [router, setLinks]);
 
   useEffect(() => {
     return () => {
@@ -397,7 +399,7 @@ export default function DashboardPage() {
     }
   };
 
-  const handleDragEnd = async (event: any) => {
+  const handleDragEnd = async (event: DragEndEvent) => {
     const { active, over } = event;
 
     if (!over || active.id === over.id) return;
@@ -445,9 +447,12 @@ export default function DashboardPage() {
         <section className="bg-white rounded-2xl border border-gray-200 p-5 md:col-span-2 shadow-sm">
           <div className="flex flex-col sm:flex-row items-start gap-4">
             {user?.avatarUrl ? (
-              <img
+              <Image
                 src={user.avatarUrl}
                 alt={user.displayName || user.username}
+                width={64}
+                height={64}
+                unoptimized
                 className="w-16 h-16 rounded-full object-cover"
               />
             ) : (
@@ -485,9 +490,12 @@ export default function DashboardPage() {
               <div className="flex items-center gap-4">
                 <div className="relative w-20 h-20">
                   {profileForm.avatarUrl ? (
-                    <img
+                    <Image
                       src={profileForm.avatarUrl}
                       alt={profileForm.displayName || user?.username || 'Avatar'}
+                      width={80}
+                      height={80}
+                      unoptimized
                       className="w-20 h-20 rounded-full object-cover"
                     />
                   ) : (
