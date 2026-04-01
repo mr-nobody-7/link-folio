@@ -57,6 +57,14 @@ export default function LoginPage() {
             onChange={onChange}
             className="rounded-xl border-[#ec5c33]/30 bg-white/80 backdrop-blur-sm"
           />
+          <div className="text-right -mt-2">
+            <Link
+              href="/auth/forgot-password"
+              className="text-sm text-[#ec5c33] underline hover:text-[#d54a29]"
+            >
+              Forgot password?
+            </Link>
+          </div>
           {err && <div className="text-sm text-[#504d46] bg-[#ec5c33]/10 border border-[#ec5c33]/25 rounded-lg px-3 py-2">{err}</div>}
           <Button className="w-full rounded-xl bg-[#ec5c33] hover:bg-[#d54a29] text-white" disabled={loading}>
             {loading ? <LoadingSpinner /> : "Log In"}
