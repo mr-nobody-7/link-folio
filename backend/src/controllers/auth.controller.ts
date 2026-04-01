@@ -12,7 +12,20 @@ import { isReservedUsername } from '../utils/reservedUsernames.js';
 import {
   SignupRequest,
   LoginRequest,
+  ForgotPasswordRequest,
+  ResetPasswordRequest,
 } from '../types/auth.types.js';
+import {
+  createPasswordResetToken,
+  hashPasswordResetToken,
+} from '../utils/passwordReset.utils.js';
+import { sendBrevoEmail } from '../utils/email.utils.js';
+
+const PASSWORD_RESET_TOKEN_TTL_MS = 15 * 60 * 1000;
+
+function getFrontendBaseUrl(): string {
+  return process.env.FRONTEND_URL || 'http://localhost:3000';
+}
 
 export const signup = async (
   req: Request,
@@ -227,5 +240,123 @@ export const logout = async (
     res.status(200).json({ message: 'Logged out' });
   } catch (error) {
     res.status(500).json({ error: 'Internal server error' });
+  }
+};
+
+export const forgotPassword = async (
+  req: Request,
+  res: Response,
+  next: NextFunction
+): Promise<void> => {
+  try {
+    const { email }: ForgotPasswordRequest = req.body;
+
+    const genericResponse = {
+      message:
+        'If an account with that email exists, a password reset link has been sent.',
+    };
+
+    const user = await User.findOne({ email: email.toLowerCase() });
+    if (!user) {
+      res.status(200).json(genericResponse);
+      return;
+    }
+
+    const { token, tokenHash } = createPasswordResetToken();
+    const expiresAt = new Date(Date.now() + PASSWORD_RESET_TOKEN_TTL_MS);
+
+    user.passwordResetTokenHash = tokenHash;
+    user.passwordResetExpiresAt = expiresAt;
+    user.passwordResetRequestedAt = new Date();
+    await user.save();
+
+    const resetUrl = `${getFrontendBaseUrl()}/auth/reset-password?token=${encodeURIComponent(token)}`;
+
+    const safeDisplayName = user.displayName || user.username || 'there';
+    const htmlContent = `
+      <div style="font-family: Arial, sans-serif; line-height: 1.6; color: #1f2937;">
+        <h2>Reset your LinkFolio password</h2>
+        <p>Hi ${safeDisplayName},</p>
+        <p>We received a request to reset your password. This link is valid for 15 minutes.</p>
+        <p>
+          <a
+            href="${resetUrl}"
+            style="display:inline-block;padding:10px 16px;background:#ec5c33;color:#fff;text-decoration:none;border-radius:8px;"
+          >
+            Reset password
+          </a>
+        </p>
+        <p>If you did not request this, you can safely ignore this email.</p>
+      </div>
+    `;
+
+    const textContent = `Reset your LinkFolio password. Open this link within 15 minutes: ${resetUrl}`;
+
+    try {
+      await sendBrevoEmail({
+        toEmail: user.email,
+        toName: user.displayName || user.username,
+        subject: 'Reset your LinkFolio password',
+        htmlContent,
+        textContent,
+      });
+    } catch (emailError) {
+      user.passwordResetTokenHash = null;
+      user.passwordResetExpiresAt = null;
+      user.passwordResetRequestedAt = null;
+      await user.save();
+      next(emailError instanceof Error ? emailError : new Error('Failed to send password reset email'));
+      return;
+    }
+
+    res.status(200).json(genericResponse);
+  } catch (error) {
+    if (error instanceof Error) {
+      next(error);
+      return;
+    }
+    next(new AppError('Failed to start password reset', 500));
+  }
+};
+
+export const resetPassword = async (
+  req: Request,
+  res: Response,
+  next: NextFunction
+): Promise<void> => {
+  try {
+    const { token, password }: ResetPasswordRequest = req.body;
+
+    const tokenHash = hashPasswordResetToken(token);
+
+    const user = await User.findOne({
+      passwordResetTokenHash: tokenHash,
+      passwordResetExpiresAt: { $gt: new Date() },
+    });
+
+    if (!user) {
+      res.status(400).json({
+        error: 'Invalid reset token',
+        message: 'Reset token is invalid or expired',
+      });
+      return;
+    }
+
+    user.password = await hashPassword(password);
+    user.passwordResetTokenHash = null;
+    user.passwordResetExpiresAt = null;
+    user.passwordResetRequestedAt = null;
+    user.refreshToken = null;
+    await user.save();
+
+    res.status(200).json({
+      message: 'Password reset successful. Please log in with your new password.',
+    });
+  } catch (error) {
+    if (error instanceof Error) {
+      next(error);
+      return;
+    }
+    next(new AppError('Failed to reset password', 500));
   }
 };
