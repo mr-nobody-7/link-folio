@@ -9,7 +9,10 @@ export interface IUser extends Document {
   bio?: string;
   avatarUrl?: string;
   theme?: string;
-  refreshToken?: string;
+  refreshToken?: string | null;
+  passwordResetTokenHash?: string | null;
+  passwordResetExpiresAt?: Date | null;
+  passwordResetRequestedAt?: Date | null;
   views?: number;
   joinedAt: Date;
 }
@@ -58,6 +61,18 @@ const userSchema = new Schema<IUser>({
   },
   refreshToken: {
     type: String,
+    default: null,
+  },
+  passwordResetTokenHash: {
+    type: String,
+    default: null,
+  },
+  passwordResetExpiresAt: {
+    type: Date,
+    default: null,
+  },
+  passwordResetRequestedAt: {
+    type: Date,
     default: null,
   },
   views: {
