@@ -1,4 +1,5 @@
 import type { Metadata } from 'next';
+import ProtectedRoute from '@/components/common/ProtectedRoute';
 
 export const metadata: Metadata = {
   title: 'Dashboard - LinkFolio',
@@ -13,5 +14,5 @@ export default function DashboardLayout({
 }: {
   children: React.ReactNode;
 }) {
-  return <>{children}</>;
+  return <ProtectedRoute>{children}</ProtectedRoute>;
 }

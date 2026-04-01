@@ -7,6 +7,7 @@ import { resetPassword } from '@/api/linkfolioApi';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import LoadingSpinner from '@/components/common/LoadingSpinner';
+import GuestOnlyRoute from '@/components/common/GuestOnlyRoute';
 
 export default function ResetPasswordPage() {
   const searchParams = useSearchParams();
@@ -63,6 +64,7 @@ export default function ResetPasswordPage() {
   };
 
   return (
+    <GuestOnlyRoute>
     <div className="min-h-screen flex items-center justify-center bg-[#f8f8f8] px-4 py-10">
       <div className="max-w-md w-full p-8 rounded-2xl bg-white shadow-xl border border-[#ec5c33]/20 animate-fade-in">
         <p className="text-sm text-[#888888] mb-2">Secure your account</p>
@@ -120,5 +122,6 @@ export default function ResetPasswordPage() {
         </div>
       </div>
     </div>
+    </GuestOnlyRoute>
   );
 }

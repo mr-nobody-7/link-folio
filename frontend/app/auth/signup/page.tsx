@@ -5,6 +5,7 @@ import { signup } from "@/api/linkfolioApi";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import LoadingSpinner from "@/components/common/LoadingSpinner";
+import GuestOnlyRoute from '@/components/common/GuestOnlyRoute';
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 
@@ -59,6 +60,7 @@ export default function SignupPage() {
   }
 
   return (
+    <GuestOnlyRoute>
     <div className="min-h-screen flex items-center justify-center bg-[#f8f8f8] px-4 py-10">
       <div className="max-w-md w-full p-8 rounded-2xl bg-white shadow-xl border border-[#ec5c33]/20 animate-fade-in">
         <p className="text-sm text-[#888888] mb-2">Start your creator page</p>
@@ -123,5 +125,6 @@ export default function SignupPage() {
         </div>
       </div>
     </div>
+    </GuestOnlyRoute>
   );
 }
