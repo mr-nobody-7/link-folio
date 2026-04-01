@@ -168,6 +168,24 @@ export async function login(body: { email: string; password: string }) {
   return data.user;
 }
 
+export async function requestPasswordReset(body: { email: string }) {
+  return apiFetch('/auth/forgot-password', {
+    method: 'POST',
+    body: JSON.stringify(body),
+  });
+}
+
+export async function resetPassword(body: {
+  token: string;
+  password: string;
+  confirmPassword: string;
+}) {
+  return apiFetch('/auth/reset-password', {
+    method: 'POST',
+    body: JSON.stringify(body),
+  });
+}
+
 export async function getProfile(username: string) {
   return apiFetch(`/profile/${encodeURIComponent(username)}`, {
     method: 'GET',
